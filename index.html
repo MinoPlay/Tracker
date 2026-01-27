@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consumption Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@3.0.0/index.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 Consumption Tracker</h1>
+        </header>
+
+        <!-- GitHub Configuration -->
+        <section class="config-section" id="config-section">
+            <h2>⚙️ GitHub Configuration</h2>
+            <div class="config-form">
+                <input type="password" id="github-token" placeholder="GitHub Personal Access Token" autocomplete="off">
+                <input type="text" id="repo-owner" placeholder="GitHub Username" autocomplete="off">
+                <input type="text" id="repo-name" placeholder="Repository Name" autocomplete="off">
+                <button onclick="saveConfig()" class="btn-save">Save Configuration</button>
+                <button onclick="toggleConfig()" class="btn-toggle">Hide Config</button>
+            </div>
+            <p class="config-help">
+                Create a token with 'repo' scope at 
+                <a href="https://github.com/settings/tokens/new" target="_blank">GitHub Settings</a>
+            </p>
+        </section>
+
+        <!-- Status Messages -->
+        <div id="status" class="status hidden"></div>
+
+        <!-- Category Buttons -->
+        <section class="tracking-section">
+            <h2>Track Consumption</h2>
+            <div class="category-buttons">
+                <button onclick="addEntry('beer')" class="category-btn beer">
+                    🍺 Beer
+                </button>
+                <button onclick="addEntry('wine')" class="category-btn wine">
+                    🍷 Wine
+                </button>
+                <button onclick="addEntry('liquor')" class="category-btn liquor">
+                    🥃 Liquor
+                </button>
+                <button onclick="addEntry('smoking')" class="category-btn smoking">
+                    🚬 Smoking
+                </button>
+            </div>
+        </section>
+
+        <!-- Statistics Chart -->
+        <section class="chart-section">
+            <div class="chart-header">
+                <h2>Statistics</h2>
+                <select id="time-period" onchange="updateChart()">
+                    <option value="7">Last 7 Days</option>
+                    <option value="30" selected>Last 30 Days</option>
+                    <option value="90">Last 90 Days</option>
+                    <option value="365">Last 365 Days</option>
+                </select>
+            </div>
+            <div class="chart-container">
+                <canvas id="consumptionChart"></canvas>
+            </div>
+            <div class="summary-stats" id="summary-stats"></div>
+        </section>
+
+        <!-- Entry History -->
+        <section class="history-section">
+            <h2>Recent Entries</h2>
+            <div id="entries-list" class="entries-list">
+                <p class="empty-message">No entries yet. Click a category button to start tracking!</p>
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

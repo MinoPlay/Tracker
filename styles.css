@@ -1,0 +1,411 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+    color: #333;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Header */
+header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+header h1 {
+    color: white;
+    font-size: 2.5em;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Sections */
+section {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+section h2 {
+    margin-bottom: 20px;
+    color: #444;
+    font-size: 1.5em;
+}
+
+/* Configuration Section */
+.config-section {
+    transition: all 0.3s ease;
+}
+
+.config-section.collapsed {
+    padding: 15px 25px;
+}
+
+.config-section.collapsed .config-form,
+.config-section.collapsed .config-help {
+    display: none;
+}
+
+.config-section.collapsed h2::after {
+    content: ' (Click to expand)';
+    font-size: 0.7em;
+    color: #888;
+    font-weight: normal;
+}
+
+.config-form {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.config-form input {
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 1em;
+    transition: border-color 0.3s;
+}
+
+.config-form input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.config-form button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-save {
+    background: #667eea;
+    color: white;
+}
+
+.btn-save:hover {
+    background: #5568d3;
+    transform: translateY(-2px);
+}
+
+.btn-toggle {
+    background: #e0e0e0;
+    color: #555;
+}
+
+.btn-toggle:hover {
+    background: #d0d0d0;
+}
+
+.config-help {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.config-help a {
+    color: #667eea;
+    text-decoration: none;
+}
+
+.config-help a:hover {
+    text-decoration: underline;
+}
+
+/* Status Messages */
+.status {
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-weight: 500;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.status.hidden {
+    display: none;
+}
+
+.status.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.status.info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+/* Category Buttons */
+.category-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.category-btn {
+    padding: 30px;
+    font-size: 1.3em;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.category-btn:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.category-btn:active {
+    transform: translateY(-2px);
+}
+
+.category-btn.beer {
+    background: linear-gradient(135deg, #FFB300, #FFA000);
+    color: white;
+}
+
+.category-btn.wine {
+    background: linear-gradient(135deg, #C62828, #B71C1C);
+    color: white;
+}
+
+.category-btn.liquor {
+    background: linear-gradient(135deg, #FF6F00, #E65100);
+    color: white;
+}
+
+.category-btn.smoking {
+    background: linear-gradient(135deg, #616161, #424242);
+    color: white;
+}
+
+/* Chart Section */
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+#time-period {
+    padding: 10px 15px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 1em;
+    cursor: pointer;
+    background: white;
+}
+
+#time-period:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.chart-container {
+    position: relative;
+    height: 400px;
+    margin-bottom: 20px;
+}
+
+.summary-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    padding-top: 20px;
+    border-top: 2px solid #eee;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.stat-item.total {
+    background: #667eea;
+    color: white;
+    font-weight: 600;
+}
+
+.stat-emoji {
+    font-size: 1.5em;
+}
+
+.stat-label {
+    font-weight: 500;
+}
+
+.stat-value {
+    margin-left: auto;
+    font-size: 1.2em;
+    font-weight: 700;
+}
+
+/* History Section */
+.entries-list {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.empty-message {
+    text-align: center;
+    color: #999;
+    padding: 40px;
+    font-style: italic;
+}
+
+.entry-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    border-left: 4px solid;
+    background: #f8f9fa;
+    transition: all 0.2s;
+}
+
+.entry-item:hover {
+    background: #e9ecef;
+    transform: translateX(4px);
+}
+
+.entry-item.beer {
+    border-left-color: #FFB300;
+}
+
+.entry-item.wine {
+    border-left-color: #C62828;
+}
+
+.entry-item.liquor {
+    border-left-color: #FF6F00;
+}
+
+.entry-item.smoking {
+    border-left-color: #616161;
+}
+
+.entry-text {
+    font-size: 1em;
+    color: #333;
+}
+
+.btn-delete {
+    padding: 6px 12px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.2s;
+}
+
+.btn-delete:hover {
+    background: #c82333;
+    transform: scale(1.05);
+}
+
+/* Scrollbar Styling */
+.entries-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.entries-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.entries-list::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+.entries-list::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 2em;
+    }
+    
+    .category-buttons {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .category-btn {
+        padding: 20px;
+        font-size: 1.1em;
+    }
+    
+    .chart-container {
+        height: 300px;
+    }
+    
+    .chart-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    #time-period {
+        width: 100%;
+    }
+    
+    .summary-stats {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+    
+    section {
+        padding: 15px;
+    }
+    
+    .category-buttons {
+        grid-template-columns: 1fr;
+    }
+    
+    .summary-stats {
+        grid-template-columns: 1fr;
+    }
+}
