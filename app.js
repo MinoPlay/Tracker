@@ -243,7 +243,7 @@ function getCategoryEmoji(category) {
         beer: '🍺',
         wine: '🍷',
         liquor: '🥃',
-        smoking: '🚬'
+        smoking: '💨'
     };
     return emojis[category] || '📊';
 }
@@ -388,7 +388,7 @@ function renderChart(data, period) {
                     tension: 0.3
                 },
                 {
-                    label: 'Smoking',
+                    label: 'Hookah',
                     data: data.smoking,
                     borderColor: '#616161',
                     backgroundColor: 'rgba(97, 97, 97, 0.1)',
@@ -460,8 +460,8 @@ function renderSummaryStats(entries) {
             <span class="stat-value">${stats.liquor}</span>
         </div>
         <div class="stat-item">
-            <span class="stat-emoji">🚬</span>
-            <span class="stat-label">Smoking:</span>
+            <span class="stat-emoji">💨</span>
+            <span class="stat-label">Hookah:</span>
             <span class="stat-value">${stats.smoking}</span>
         </div>
         <div class="stat-item total">
