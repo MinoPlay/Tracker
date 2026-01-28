@@ -16,7 +16,7 @@
 
         <!-- GitHub Configuration -->
         <section class="config-section" id="config-section">
-            <h2>⚙️ Configuration</h2>
+            <h2 onclick="toggleConfig()" style="cursor: pointer;">⚙️ Configuration</h2>
             <div class="mode-toggle">
                 <button onclick="setMode('local')" class="mode-btn" id="mode-local">🏠 Local Mode</button>
                 <button onclick="setMode('github')" class="mode-btn" id="mode-github">🐙 GitHub Mode</button>
@@ -31,7 +31,6 @@
                 <button onclick="generateDummyData()" class="btn-generate">🎲 Generate Sample Data</button>
                 <button onclick="clearLocalData()" class="btn-clear">🗑️ Clear All Data</button>
             </div>
-            <button onclick="toggleConfig()" class="btn-toggle">Hide Config</button>
             <p class="config-help" id="github-help">
                 Create a token with 'repo' scope at 
                 <a href="https://github.com/settings/tokens/new" target="_blank">GitHub Settings</a>
