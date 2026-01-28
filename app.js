@@ -86,10 +86,15 @@ function updateModeUI() {
     document.getElementById('mode-github').classList.toggle('active', !isLocal);
     
     // Show/hide relevant sections
-    document.getElementById('github-config').style.display = isLocal ? 'none' : 'grid';
-    document.getElementById('local-controls').style.display = isLocal ? 'flex' : 'none';
-    document.getElementById('github-help').style.display = isLocal ? 'none' : 'block';
-    document.getElementById('local-help').style.display = isLocal ? 'block' : 'none';
+    document.getElementById('github-config').style.display = isLocal ? 'none' : '';
+    document.getElementById('local-controls').style.display = isLocal ? '' : 'none';
+    document.getElementById('github-help').style.display = isLocal ? 'none' : '';
+    document.getElementById('local-help').style.display = isLocal ? '' : 'none';
+    
+    // Auto-collapse config section when mode is configured
+    if ((isLocal || isConfigured()) && !document.getElementById('config-section').classList.contains('collapsed')) {
+        document.getElementById('config-section').classList.add('collapsed');
+    }
 }
 
 function generateDummyData() {
