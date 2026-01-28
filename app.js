@@ -1,11 +1,14 @@
 // Configuration
 const CONFIG_KEY = 'consumption-tracker-config';
 const DATA_FILE = 'consumption.json';
+const LOCAL_DATA_KEY = 'consumption-tracker-local-data';
+const MODE_KEY = 'consumption-tracker-mode';
 
 let config = {
     token: '',
     owner: '',
-    repo: ''
+    repo: '',
+    mode: 'local' // 'local' or 'github'
 };
 
 let currentData = {
@@ -19,7 +22,8 @@ let chart = null;
 
 window.addEventListener('DOMContentLoaded', () => {
     loadConfig();
-    if (isConfigured()) {
+    updateModeUI();
+    if (config.mode === 'local' || isConfigured()) {
         loadData();
     }
 });
@@ -30,13 +34,16 @@ function loadConfig() {
     const saved = localStorage.getItem(CONFIG_KEY);
     if (saved) {
         config = JSON.parse(saved);
-        document.getElementById('github-token').value = config.token;
-        document.getElementById('repo-owner').value = config.owner;
-        document.getElementById('repo-name').value = config.repo;
+        document.getElementById('github-token').value = config.token || '';
+        document.getElementById('repo-owner').value = config.owner || '';
+        document.getElementById('repo-name').value = config.repo || '';
+        config.mode = config.mode || 'local';
         
-        if (isConfigured()) {
+        if (config.mode === 'local' || isConfigured()) {
             document.getElementById('config-section').classList.add('collapsed');
         }
+    } else {
+        config.mode = 'local';
     }
 }
 
@@ -62,6 +69,71 @@ function toggleConfig() {
 
 function isConfigured() {
     return config.token && config.owner && config.repo;
+}
+
+function setMode(mode) {
+    config.mode = mode;
+    localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+    updateModeUI();
+    loadData();
+}
+
+function updateModeUI() {
+    const isLocal = config.mode === 'local';
+    
+    // Update button states
+    document.getElementById('mode-local').classList.toggle('active', isLocal);
+    document.getElementById('mode-github').classList.toggle('active', !isLocal);
+    
+    // Show/hide relevant sections
+    document.getElementById('github-config').style.display = isLocal ? 'none' : 'grid';
+    document.getElementById('local-controls').style.display = isLocal ? 'flex' : 'none';
+    document.getElementById('github-help').style.display = isLocal ? 'none' : 'block';
+    document.getElementById('local-help').style.display = isLocal ? 'block' : 'none';
+}
+
+function generateDummyData() {
+    const categories = ['beer', 'wine', 'liquor', 'smoking'];
+    const entries = [];
+    
+    // Generate data for the last 30 days
+    const today = new Date();
+    for (let i = 29; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        
+        // Random number of entries per day (0-5)
+        const numEntries = Math.floor(Math.random() * 6);
+        
+        for (let j = 0; j < numEntries; j++) {
+            const category = categories[Math.floor(Math.random() * categories.length)];
+            const hour = Math.floor(Math.random() * 14) + 10; // Between 10:00 and 23:59
+            const minute = Math.floor(Math.random() * 60);
+            
+            date.setHours(hour, minute, 0, 0);
+            
+            entries.push({
+                id: `${date.getTime()}-${j}`,
+                timestamp: date.toISOString(),
+                category: category
+            });
+        }
+    }
+    
+    currentData.entries = entries;
+    saveDataLocal();
+    showStatus('Sample data generated!', 'success');
+}
+
+function clearLocalData() {
+    if (!confirm('Are you sure you want to clear all local data?')) {
+        return;
+    }
+    
+    currentData.entries = [];
+    localStorage.removeItem(LOCAL_DATA_KEY);
+    renderAll();
+    showStatus('All data cleared', 'success');
 }
 
 // ===== STATUS MESSAGES =====
@@ -108,6 +180,11 @@ async function githubRequest(method, endpoint, body = null) {
 }
 
 async function loadData() {
+    if (config.mode === 'local') {
+        loadDataLocal();
+        return;
+    }
+    
     if (!isConfigured()) {
         showStatus('Please configure GitHub settings first', 'error');
         return;
@@ -136,7 +213,23 @@ async function loadData() {
     }
 }
 
+function loadDataLocal() {
+    const saved = localStorage.getItem(LOCAL_DATA_KEY);
+    if (saved) {
+        currentData = JSON.parse(saved);
+    } else {
+        currentData = { entries: [], sha: null };
+    }
+    renderAll();
+}
+
 async function saveData(entries) {
+    if (config.mode === 'local') {
+        currentData.entries = entries;
+        saveDataLocal();
+        return;
+    }
+    
     const content = btoa(JSON.stringify({ entries }, null, 2));
     
     const body = {
@@ -165,10 +258,16 @@ async function saveData(entries) {
     }
 }
 
+function saveDataLocal() {
+    localStorage.setItem(LOCAL_DATA_KEY, JSON.stringify(currentData));
+    renderAll();
+    showStatus('Saved locally', 'success');
+}
+
 // ===== ENTRY MANAGEMENT =====
 
 async function addEntry(category) {
-    if (!isConfigured()) {
+    if (config.mode !== 'local' && !isConfigured()) {
         showStatus('Please configure GitHub settings first', 'error');
         return;
     }
@@ -192,11 +291,37 @@ async function deleteEntry(id) {
     await saveData(updatedEntries);
 }
 
+// ===== TAB MANAGEMENT =====
+
+function switchTab(tabName) {
+    // Remove active class from all tabs and content
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    
+    // Add active class to selected tab and content
+    event.target.classList.add('active');
+    document.getElementById(`tab-${tabName}`).classList.add('active');
+    
+    // Render the content for the selected tab
+    if (tabName === 'table') {
+        renderTableView();
+    } else if (tabName === 'overview') {
+        renderOverview();
+    }
+}
+
 // ===== RENDERING =====
 
 function renderAll() {
     renderEntries();
     updateChart();
+    // Re-render active tab content
+    const activeTab = document.querySelector('.tab-btn.active');
+    if (activeTab && activeTab.textContent.includes('Table')) {
+        renderTableView();
+    } else if (activeTab && activeTab.textContent.includes('Overview')) {
+        renderOverview();
+    }
 }
 
 function renderEntries() {
@@ -253,8 +378,29 @@ function getCategoryEmoji(category) {
 function updateChart() {
     const period = parseInt(document.getElementById('time-period').value);
     const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - period);
+    let startDate = new Date();
+    
+    // If there are entries, set the start date based on the first entry
+    if (currentData.entries.length > 0) {
+        const sortedEntries = [...currentData.entries].sort((a, b) => 
+            new Date(a.timestamp) - new Date(b.timestamp)
+        );
+        const firstEntryDate = new Date(sortedEntries[0].timestamp);
+        firstEntryDate.setHours(0, 0, 0, 0);
+        
+        // Calculate the end of the period from the first entry
+        const periodEndDate = new Date(firstEntryDate);
+        periodEndDate.setDate(periodEndDate.getDate() + period - 1);
+        
+        // Use the first entry date as start, and the minimum of period end or today as end
+        startDate = firstEntryDate;
+        if (periodEndDate < endDate) {
+            endDate.setTime(periodEndDate.getTime());
+        }
+    } else {
+        // If no entries, use the default period from today
+        startDate.setDate(startDate.getDate() - period);
+    }
     
     // Filter entries by date range
     const filteredEntries = currentData.entries.filter(entry => {
@@ -468,6 +614,248 @@ function renderSummaryStats(entries) {
             <span class="stat-emoji">📊</span>
             <span class="stat-label">Total:</span>
             <span class="stat-value">${total}</span>
+        </div>
+    `;
+}
+// ===== TABLE VIEW =====
+
+function renderTableView() {
+    const period = parseInt(document.getElementById('time-period').value);
+    const endDate = new Date();
+    let startDate = new Date();
+    
+    // Use the same date logic as the chart
+    if (currentData.entries.length > 0) {
+        const sortedEntries = [...currentData.entries].sort((a, b) => 
+            new Date(a.timestamp) - new Date(b.timestamp)
+        );
+        const firstEntryDate = new Date(sortedEntries[0].timestamp);
+        firstEntryDate.setHours(0, 0, 0, 0);
+        
+        const periodEndDate = new Date(firstEntryDate);
+        periodEndDate.setDate(periodEndDate.getDate() + period - 1);
+        
+        startDate = firstEntryDate;
+        if (periodEndDate < endDate) {
+            endDate.setTime(periodEndDate.getTime());
+        }
+    } else {
+        startDate.setDate(startDate.getDate() - period);
+    }
+    
+    // Filter entries by date range
+    const filteredEntries = currentData.entries.filter(entry => {
+        const entryDate = new Date(entry.timestamp);
+        return entryDate >= startDate && entryDate <= endDate;
+    });
+    
+    // Aggregate by day
+    const dailyData = [];
+    const current = new Date(startDate);
+    current.setHours(0, 0, 0, 0);
+    
+    while (current <= endDate) {
+        const dateStr = current.toISOString().split('T')[0];
+        
+        const dayEntries = filteredEntries.filter(e => {
+            const entryDate = new Date(e.timestamp);
+            return entryDate.toISOString().split('T')[0] === dateStr;
+        });
+        
+        const beer = dayEntries.filter(e => e.category === 'beer').length;
+        const wine = dayEntries.filter(e => e.category === 'wine').length;
+        const liquor = dayEntries.filter(e => e.category === 'liquor').length;
+        const smoking = dayEntries.filter(e => e.category === 'smoking').length;
+        const total = beer + wine + liquor + smoking;
+        
+        if (total > 0) {
+            dailyData.push({
+                date: new Date(current),
+                beer,
+                wine,
+                liquor,
+                smoking,
+                total
+            });
+        }
+        
+        current.setDate(current.getDate() + 1);
+    }
+    
+    // Render table
+    const tbody = document.getElementById('table-body');
+    
+    if (dailyData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: #999;">No data for this period</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = dailyData.reverse().map(day => {
+        const dayOfWeek = day.date.getDay();
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+        const rowClass = isWeekend ? 'row-weekend' : '';
+        
+        return `
+            <tr class="${rowClass}">
+                <td>${formatTableDate(day.date)}</td>
+                <td>${day.beer || '-'}</td>
+                <td>${day.wine || '-'}</td>
+                <td>${day.liquor || '-'}</td>
+                <td>${day.smoking || '-'}</td>
+                <td class="total-cell">${day.total}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function formatTableDate(date) {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+}
+
+// ===== OVERVIEW VIEW =====
+
+function renderOverview() {
+    const period = parseInt(document.getElementById('time-period').value);
+    const endDate = new Date();
+    let startDate = new Date();
+    
+    // Use the same date logic as the chart
+    if (currentData.entries.length > 0) {
+        const sortedEntries = [...currentData.entries].sort((a, b) => 
+            new Date(a.timestamp) - new Date(b.timestamp)
+        );
+        const firstEntryDate = new Date(sortedEntries[0].timestamp);
+        firstEntryDate.setHours(0, 0, 0, 0);
+        
+        const periodEndDate = new Date(firstEntryDate);
+        periodEndDate.setDate(periodEndDate.getDate() + period - 1);
+        
+        startDate = firstEntryDate;
+        if (periodEndDate < endDate) {
+            endDate.setTime(periodEndDate.getTime());
+        }
+    } else {
+        startDate.setDate(startDate.getDate() - period);
+    }
+    
+    // Filter entries by date range
+    const filteredEntries = currentData.entries.filter(entry => {
+        const entryDate = new Date(entry.timestamp);
+        return entryDate >= startDate && entryDate <= endDate;
+    });
+    
+    // Separate weekday and weekend entries
+    const weekdayEntries = filteredEntries.filter(entry => {
+        const day = new Date(entry.timestamp).getDay();
+        return day !== 0 && day !== 6; // Not Sunday (0) or Saturday (6)
+    });
+    
+    const weekendEntries = filteredEntries.filter(entry => {
+        const day = new Date(entry.timestamp).getDay();
+        return day === 0 || day === 6; // Sunday or Saturday
+    });
+    
+    // Calculate statistics
+    const stats = {
+        beer: filteredEntries.filter(e => e.category === 'beer').length,
+        wine: filteredEntries.filter(e => e.category === 'wine').length,
+        liquor: filteredEntries.filter(e => e.category === 'liquor').length,
+        smoking: filteredEntries.filter(e => e.category === 'smoking').length
+    };
+    
+    const weekdayStats = {
+        beer: weekdayEntries.filter(e => e.category === 'beer').length,
+        wine: weekdayEntries.filter(e => e.category === 'wine').length,
+        liquor: weekdayEntries.filter(e => e.category === 'liquor').length,
+        smoking: weekdayEntries.filter(e => e.category === 'smoking').length
+    };
+    
+    const weekendStats = {
+        beer: weekendEntries.filter(e => e.category === 'beer').length,
+        wine: weekendEntries.filter(e => e.category === 'wine').length,
+        liquor: weekendEntries.filter(e => e.category === 'liquor').length,
+        smoking: weekendEntries.filter(e => e.category === 'smoking').length
+    };
+    
+    const total = stats.beer + stats.wine + stats.liquor + stats.smoking;
+    const weekdayTotal = weekdayStats.beer + weekdayStats.wine + weekdayStats.liquor + weekdayStats.smoking;
+    const weekendTotal = weekendStats.beer + weekendStats.wine + weekendStats.liquor + weekendStats.smoking;
+    
+    const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+    
+    // Calculate number of weekdays and weekend days
+    let weekdayCount = 0;
+    let weekendCount = 0;
+    const current = new Date(startDate);
+    while (current <= endDate) {
+        const day = current.getDay();
+        if (day === 0 || day === 6) {
+            weekendCount++;
+        } else {
+            weekdayCount++;
+        }
+        current.setDate(current.getDate() + 1);
+    }
+    
+    // Calculate averages per category
+    const dailyAvg = {
+        beer: days > 0 ? (stats.beer / days).toFixed(1) : 0,
+        wine: days > 0 ? (stats.wine / days).toFixed(1) : 0,
+        liquor: days > 0 ? (stats.liquor / days).toFixed(1) : 0,
+        smoking: days > 0 ? (stats.smoking / days).toFixed(1) : 0
+    };
+    
+    // Render overview cards
+    const container = document.getElementById('overview-grid');
+    container.innerHTML = `
+        <div class="overview-card beer">
+            <h3>🍺 Beer</h3>
+            <div class="value">${stats.beer}</div>
+            <div class="label">${dailyAvg.beer} per day average</div>
+        </div>
+        
+        <div class="overview-card wine">
+            <h3>🍷 Wine</h3>
+            <div class="value">${stats.wine}</div>
+            <div class="label">${dailyAvg.wine} per day average</div>
+        </div>
+        
+        <div class="overview-card liquor">
+            <h3>🥃 Liquor</h3>
+            <div class="value">${stats.liquor}</div>
+            <div class="label">${dailyAvg.liquor} per day average</div>
+        </div>
+        
+        <div class="overview-card smoking">
+            <h3>💨 Hookah</h3>
+            <div class="value">${stats.smoking}</div>
+            <div class="label">${dailyAvg.smoking} per day average</div>
+        </div>
+        
+        <div class="overview-card total">
+            <h3>Total Consumption</h3>
+            <div class="value">${total}</div>
+            <div class="label">${days} days tracked</div>
+        </div>
+        
+        <div class="overview-card weekday">
+            <h3>📅 Weekdays</h3>
+            <div class="value">${weekdayTotal}</div>
+            <div class="label">${weekdayCount} days · ${(weekdayTotal / (weekdayCount || 1)).toFixed(1)} per day</div>
+            <div class="breakdown">
+                🍺 ${weekdayStats.beer} · 🍷 ${weekdayStats.wine} · 🥃 ${weekdayStats.liquor} · 💨 ${weekdayStats.smoking}
+            </div>
+        </div>
+        
+        <div class="overview-card weekend">
+            <h3>🎉 Weekend</h3>
+            <div class="value">${weekendTotal}</div>
+            <div class="label">${weekendCount} days · ${(weekendTotal / (weekendCount || 1)).toFixed(1)} per day</div>
+            <div class="breakdown">
+                🍺 ${weekendStats.beer} · 🍷 ${weekendStats.wine} · 🥃 ${weekendStats.liquor} · 💨 ${weekendStats.smoking}
+            </div>
         </div>
     `;
 }
