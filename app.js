@@ -3,6 +3,7 @@ const CONFIG_KEY = 'consumption-tracker-config';
 const DATA_FILE = 'consumption.json';
 const LOCAL_DATA_KEY = 'consumption-tracker-local-data';
 const MODE_KEY = 'consumption-tracker-mode';
+const CHART_TYPE_KEY = 'consumption-tracker-chart-type';
 
 let config = {
     token: '',
@@ -22,6 +23,7 @@ let chart = null;
 
 window.addEventListener('DOMContentLoaded', () => {
     loadConfig();
+    loadChartTypePreference();
     updateModeUI();
     if (config.mode === 'local' || isConfigured()) {
         loadData();
@@ -69,6 +71,19 @@ function toggleConfig() {
 
 function isConfigured() {
     return config.token && config.owner && config.repo;
+}
+
+function loadChartTypePreference() {
+    const savedType = localStorage.getItem(CHART_TYPE_KEY);
+    if (savedType) {
+        document.getElementById('chart-type').value = savedType;
+    }
+}
+
+function updateChartType() {
+    const chartType = document.getElementById('chart-type').value;
+    localStorage.setItem(CHART_TYPE_KEY, chartType);
+    updateChart();
 }
 
 function setMode(mode) {
@@ -512,8 +527,10 @@ function renderChart(data, period) {
         chart.destroy();
     }
     
+    const chartType = document.getElementById('chart-type').value;
+    
     chart = new Chart(ctx, {
-        type: 'line',
+        type: chartType,
         data: {
             labels: data.labels,
             datasets: [

@@ -286,6 +286,32 @@ section h2 {
     gap: 15px;
 }
 
+.chart-controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.chart-controls select {
+    padding: 10px 15px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 1em;
+    cursor: pointer;
+    background: white;
+    transition: all 0.3s;
+}
+
+.chart-controls select:hover {
+    border-color: #667eea;
+}
+
+.chart-controls select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
 /* Tab Navigation */
 .tab-navigation {
     display: flex;
