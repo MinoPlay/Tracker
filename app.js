@@ -77,6 +77,8 @@ function loadChartTypePreference() {
     const savedType = localStorage.getItem(CHART_TYPE_KEY);
     if (savedType) {
         document.getElementById('chart-type').value = savedType;
+    } else {
+        document.getElementById('chart-type').value = 'bar';
     }
 }
 
@@ -398,6 +400,7 @@ function getCategoryEmoji(category) {
 function updateChart() {
     const period = parseInt(document.getElementById('time-period').value);
     const endDate = new Date();
+    endDate.setHours(23, 59, 59, 999); // Include entire current day
     let startDate = new Date();
     
     // If there are entries, set the start date based on the first entry
@@ -528,6 +531,7 @@ function renderChart(data, period) {
     }
     
     const chartType = document.getElementById('chart-type').value;
+    const isBar = chartType === 'bar';
     
     chart = new Chart(ctx, {
         type: chartType,
@@ -538,28 +542,28 @@ function renderChart(data, period) {
                     label: 'Beer',
                     data: data.beer,
                     borderColor: '#FFB300',
-                    backgroundColor: 'rgba(255, 179, 0, 0.1)',
+                    backgroundColor: isBar ? '#FFB300' : 'rgba(255, 179, 0, 0.1)',
                     tension: 0.3
                 },
                 {
                     label: 'Wine',
                     data: data.wine,
                     borderColor: '#C62828',
-                    backgroundColor: 'rgba(198, 40, 40, 0.1)',
+                    backgroundColor: isBar ? '#C62828' : 'rgba(198, 40, 40, 0.1)',
                     tension: 0.3
                 },
                 {
                     label: 'Liquor',
                     data: data.liquor,
                     borderColor: '#FF6F00',
-                    backgroundColor: 'rgba(255, 111, 0, 0.1)',
+                    backgroundColor: isBar ? '#FF6F00' : 'rgba(255, 111, 0, 0.1)',
                     tension: 0.3
                 },
                 {
                     label: 'Hookah',
                     data: data.smoking,
                     borderColor: '#616161',
-                    backgroundColor: 'rgba(97, 97, 97, 0.1)',
+                    backgroundColor: isBar ? '#616161' : 'rgba(97, 97, 97, 0.1)',
                     tension: 0.3
                 }
             ]
@@ -607,7 +611,7 @@ function renderSummaryStats(entries) {
         smoking: entries.filter(e => e.category === 'smoking').length
     };
     
-    const total = stats.beer + stats.wine + stats.wine + stats.liquor + stats.smoking;
+    const total = stats.beer + stats.wine + stats.liquor + stats.smoking;
     const period = document.getElementById('time-period').value;
     
     const container = document.getElementById('summary-stats');
@@ -644,6 +648,7 @@ function renderSummaryStats(entries) {
 function renderTableView() {
     const period = parseInt(document.getElementById('time-period').value);
     const endDate = new Date();
+    endDate.setHours(23, 59, 59, 999); // Include entire current day
     let startDate = new Date();
     
     // Use the same date logic as the chart
@@ -741,6 +746,7 @@ function formatTableDate(date) {
 function renderOverview() {
     const period = parseInt(document.getElementById('time-period').value);
     const endDate = new Date();
+    endDate.setHours(23, 59, 59, 999); // Include entire current day
     let startDate = new Date();
     
     // Use the same date logic as the chart
