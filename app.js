@@ -40,7 +40,7 @@ function loadConfig() {
         document.getElementById('repo-owner').value = config.owner || '';
         document.getElementById('repo-name').value = config.repo || '';
         config.mode = config.mode || 'local';
-        
+
         if (config.mode === 'local' || isConfigured()) {
             document.getElementById('config-section').classList.add('collapsed');
         }
@@ -53,12 +53,12 @@ function saveConfig() {
     config.token = document.getElementById('github-token').value.trim();
     config.owner = document.getElementById('repo-owner').value.trim();
     config.repo = document.getElementById('repo-name').value.trim();
-    
+
     if (!config.token || !config.owner || !config.repo) {
         showStatus('Please fill in all configuration fields', 'error');
         return;
     }
-    
+
     localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
     showStatus('Configuration saved!', 'success');
     document.getElementById('config-section').classList.add('collapsed');
@@ -97,17 +97,17 @@ function setMode(mode) {
 
 function updateModeUI() {
     const isLocal = config.mode === 'local';
-    
+
     // Update button states
     document.getElementById('mode-local').classList.toggle('active', isLocal);
     document.getElementById('mode-github').classList.toggle('active', !isLocal);
-    
+
     // Show/hide relevant sections
     document.getElementById('github-config').style.display = isLocal ? 'none' : '';
     document.getElementById('local-controls').style.display = isLocal ? '' : 'none';
     document.getElementById('github-help').style.display = isLocal ? 'none' : '';
     document.getElementById('local-help').style.display = isLocal ? '' : 'none';
-    
+
     // Auto-collapse config section when mode is configured
     if ((isLocal || isConfigured()) && !document.getElementById('config-section').classList.contains('collapsed')) {
         document.getElementById('config-section').classList.add('collapsed');
@@ -117,23 +117,23 @@ function updateModeUI() {
 function generateDummyData() {
     const categories = ['beer', 'wine', 'liquor', 'smoking'];
     const entries = [];
-    
+
     // Generate data for the last 30 days
     const today = new Date();
     for (let i = 29; i >= 0; i--) {
         const date = new Date(today);
         date.setDate(date.getDate() - i);
-        
+
         // Random number of entries per day (0-5)
         const numEntries = Math.floor(Math.random() * 6);
-        
+
         for (let j = 0; j < numEntries; j++) {
             const category = categories[Math.floor(Math.random() * categories.length)];
             const hour = Math.floor(Math.random() * 14) + 10; // Between 10:00 and 23:59
             const minute = Math.floor(Math.random() * 60);
-            
+
             date.setHours(hour, minute, 0, 0);
-            
+
             entries.push({
                 id: `${date.getTime()}-${j}`,
                 timestamp: date.toISOString(),
@@ -141,7 +141,7 @@ function generateDummyData() {
             });
         }
     }
-    
+
     currentData.entries = entries;
     saveDataLocal();
     showStatus('Sample data generated!', 'success');
@@ -151,7 +151,7 @@ function clearLocalData() {
     if (!confirm('Are you sure you want to clear all local data?')) {
         return;
     }
-    
+
     currentData.entries = [];
     localStorage.removeItem(LOCAL_DATA_KEY);
     renderAll();
@@ -165,7 +165,7 @@ function showStatus(message, type = 'info') {
     statusDiv.textContent = message;
     statusDiv.className = `status ${type}`;
     statusDiv.classList.remove('hidden');
-    
+
     if (type === 'success') {
         setTimeout(() => {
             statusDiv.classList.add('hidden');
@@ -177,7 +177,7 @@ function showStatus(message, type = 'info') {
 
 async function githubRequest(method, endpoint, body = null) {
     const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${endpoint}`;
-    
+
     const options = {
         method,
         headers: {
@@ -186,18 +186,18 @@ async function githubRequest(method, endpoint, body = null) {
             'Content-Type': 'application/json'
         }
     };
-    
+
     if (body) {
         options.body = JSON.stringify(body);
     }
-    
+
     const response = await fetch(url, options);
-    
+
     if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`GitHub API error: ${response.status} - ${errorText}`);
     }
-    
+
     return response.json();
 }
 
@@ -206,22 +206,22 @@ async function loadData() {
         loadDataLocal();
         return;
     }
-    
+
     if (!isConfigured()) {
         showStatus('Please configure GitHub settings first', 'error');
         return;
     }
-    
+
     try {
         showStatus('Loading data...', 'info');
         const data = await githubRequest('GET', DATA_FILE);
         const content = JSON.parse(atob(data.content));
-        
+
         currentData = {
             entries: content.entries || [],
             sha: data.sha
         };
-        
+
         renderAll();
         showStatus('Data loaded successfully', 'success');
     } catch (error) {
@@ -251,27 +251,27 @@ async function saveData(entries) {
         saveDataLocal();
         return;
     }
-    
+
     const content = btoa(JSON.stringify({ entries }, null, 2));
-    
+
     const body = {
         message: `Update consumption data - ${new Date().toISOString()}`,
         content: content
     };
-    
+
     if (currentData.sha) {
         body.sha = currentData.sha;
     }
-    
+
     try {
         showStatus('Saving...', 'info');
         const response = await githubRequest('PUT', DATA_FILE, body);
-        
+
         currentData = {
             entries: entries,
             sha: response.content.sha
         };
-        
+
         renderAll();
         showStatus('Saved successfully', 'success');
     } catch (error) {
@@ -293,13 +293,13 @@ async function addEntry(category) {
         showStatus('Please configure GitHub settings first', 'error');
         return;
     }
-    
+
     const entry = {
         id: Date.now().toString(),
         timestamp: new Date().toISOString(),
         category: category
     };
-    
+
     const updatedEntries = [...currentData.entries, entry];
     await saveData(updatedEntries);
 }
@@ -308,7 +308,7 @@ async function deleteEntry(id) {
     if (!confirm('Are you sure you want to delete this entry?')) {
         return;
     }
-    
+
     const updatedEntries = currentData.entries.filter(e => e.id !== id);
     await saveData(updatedEntries);
 }
@@ -319,11 +319,11 @@ function switchTab(tabName) {
     // Remove active class from all tabs and content
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-    
+
     // Add active class to selected tab and content
     event.target.classList.add('active');
     document.getElementById(`tab-${tabName}`).classList.add('active');
-    
+
     // Render the content for the selected tab
     if (tabName === 'table') {
         renderTableView();
@@ -348,23 +348,23 @@ function renderAll() {
 
 function renderEntries() {
     const container = document.getElementById('entries-list');
-    
+
     if (currentData.entries.length === 0) {
         container.innerHTML = '<p class="empty-message">No entries yet. Click a category button to start tracking!</p>';
         return;
     }
-    
+
     // Sort by timestamp, newest first
-    const sortedEntries = [...currentData.entries].sort((a, b) => 
+    const sortedEntries = [...currentData.entries].sort((a, b) =>
         new Date(b.timestamp) - new Date(a.timestamp)
     );
-    
+
     container.innerHTML = sortedEntries.map(entry => {
         const date = new Date(entry.timestamp);
         const formatted = formatDateTime(date);
         const emoji = getCategoryEmoji(entry.category);
-        const categoryName = entry.category.charAt(0).toUpperCase() + entry.category.slice(1);
-        
+        const categoryName = getCategoryDisplayName(entry.category);
+
         return `
             <div class="entry-item ${entry.category}">
                 <span class="entry-text">${emoji} ${categoryName} - ${formatted}</span>
@@ -381,7 +381,7 @@ function formatDateTime(date) {
     const year = date.getFullYear();
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
-    
+
     return `${month} ${day}, ${year} ${hours}:${minutes}`;
 }
 
@@ -395,6 +395,16 @@ function getCategoryEmoji(category) {
     return emojis[category] || '📊';
 }
 
+function getCategoryDisplayName(category) {
+    const displayNames = {
+        beer: 'Beer',
+        wine: 'Wine',
+        liquor: 'Liquor',
+        smoking: 'Hookah'
+    };
+    return displayNames[category] || category.charAt(0).toUpperCase() + category.slice(1);
+}
+
 // ===== CHART AND STATISTICS =====
 
 function updateChart() {
@@ -402,19 +412,19 @@ function updateChart() {
     const endDate = new Date();
     endDate.setHours(23, 59, 59, 999); // Include entire current day
     let startDate = new Date();
-    
+
     // If there are entries, set the start date based on the first entry
     if (currentData.entries.length > 0) {
-        const sortedEntries = [...currentData.entries].sort((a, b) => 
+        const sortedEntries = [...currentData.entries].sort((a, b) =>
             new Date(a.timestamp) - new Date(b.timestamp)
         );
         const firstEntryDate = new Date(sortedEntries[0].timestamp);
         firstEntryDate.setHours(0, 0, 0, 0);
-        
+
         // Calculate the end of the period from the first entry
         const periodEndDate = new Date(firstEntryDate);
         periodEndDate.setDate(periodEndDate.getDate() + period - 1);
-        
+
         // Use the first entry date as start, and the minimum of period end or today as end
         startDate = firstEntryDate;
         if (periodEndDate < endDate) {
@@ -424,13 +434,13 @@ function updateChart() {
         // If no entries, use the default period from today
         startDate.setDate(startDate.getDate() - period);
     }
-    
+
     // Filter entries by date range
     const filteredEntries = currentData.entries.filter(entry => {
         const entryDate = new Date(entry.timestamp);
         return entryDate >= startDate && entryDate <= endDate;
     });
-    
+
     // Aggregate data
     let aggregatedData;
     if (period <= 30) {
@@ -440,7 +450,7 @@ function updateChart() {
         // Weekly aggregation for 90 and 365 days
         aggregatedData = aggregateByWeek(filteredEntries, startDate, endDate);
     }
-    
+
     renderChart(aggregatedData, period);
     renderSummaryStats(filteredEntries);
 }
@@ -453,27 +463,27 @@ function aggregateByDay(entries, startDate, endDate) {
         liquor: [],
         smoking: []
     };
-    
+
     const current = new Date(startDate);
     current.setHours(0, 0, 0, 0);
-    
+
     while (current <= endDate) {
         const dateStr = current.toISOString().split('T')[0];
         data.labels.push(formatChartLabel(current, false));
-        
+
         const dayEntries = entries.filter(e => {
             const entryDate = new Date(e.timestamp);
             return entryDate.toISOString().split('T')[0] === dateStr;
         });
-        
+
         data.beer.push(dayEntries.filter(e => e.category === 'beer').length);
         data.wine.push(dayEntries.filter(e => e.category === 'wine').length);
         data.liquor.push(dayEntries.filter(e => e.category === 'liquor').length);
         data.smoking.push(dayEntries.filter(e => e.category === 'smoking').length);
-        
+
         current.setDate(current.getDate() + 1);
     }
-    
+
     return data;
 }
 
@@ -485,32 +495,32 @@ function aggregateByWeek(entries, startDate, endDate) {
         liquor: [],
         smoking: []
     };
-    
+
     // Start from the beginning of the week
     const current = new Date(startDate);
     current.setHours(0, 0, 0, 0);
     const dayOfWeek = current.getDay();
     current.setDate(current.getDate() - dayOfWeek); // Go to Sunday
-    
+
     while (current <= endDate) {
         const weekEnd = new Date(current);
         weekEnd.setDate(weekEnd.getDate() + 6);
-        
+
         data.labels.push(formatChartLabel(current, true));
-        
+
         const weekEntries = entries.filter(e => {
             const entryDate = new Date(e.timestamp);
             return entryDate >= current && entryDate <= weekEnd;
         });
-        
+
         data.beer.push(weekEntries.filter(e => e.category === 'beer').length);
         data.wine.push(weekEntries.filter(e => e.category === 'wine').length);
         data.liquor.push(weekEntries.filter(e => e.category === 'liquor').length);
         data.smoking.push(weekEntries.filter(e => e.category === 'smoking').length);
-        
+
         current.setDate(current.getDate() + 7);
     }
-    
+
     return data;
 }
 
@@ -525,14 +535,14 @@ function formatChartLabel(date, isWeek) {
 
 function renderChart(data, period) {
     const ctx = document.getElementById('consumptionChart').getContext('2d');
-    
+
     if (chart) {
         chart.destroy();
     }
-    
+
     const chartType = document.getElementById('chart-type').value;
     const isBar = chartType === 'bar';
-    
+
     chart = new Chart(ctx, {
         type: chartType,
         data: {
@@ -610,10 +620,10 @@ function renderSummaryStats(entries) {
         liquor: entries.filter(e => e.category === 'liquor').length,
         smoking: entries.filter(e => e.category === 'smoking').length
     };
-    
+
     const total = stats.beer + stats.wine + stats.liquor + stats.smoking;
     const period = document.getElementById('time-period').value;
-    
+
     const container = document.getElementById('summary-stats');
     container.innerHTML = `
         <div class="stat-item">
@@ -650,18 +660,18 @@ function renderTableView() {
     const endDate = new Date();
     endDate.setHours(23, 59, 59, 999); // Include entire current day
     let startDate = new Date();
-    
+
     // Use the same date logic as the chart
     if (currentData.entries.length > 0) {
-        const sortedEntries = [...currentData.entries].sort((a, b) => 
+        const sortedEntries = [...currentData.entries].sort((a, b) =>
             new Date(a.timestamp) - new Date(b.timestamp)
         );
         const firstEntryDate = new Date(sortedEntries[0].timestamp);
         firstEntryDate.setHours(0, 0, 0, 0);
-        
+
         const periodEndDate = new Date(firstEntryDate);
         periodEndDate.setDate(periodEndDate.getDate() + period - 1);
-        
+
         startDate = firstEntryDate;
         if (periodEndDate < endDate) {
             endDate.setTime(periodEndDate.getTime());
@@ -669,32 +679,32 @@ function renderTableView() {
     } else {
         startDate.setDate(startDate.getDate() - period);
     }
-    
+
     // Filter entries by date range
     const filteredEntries = currentData.entries.filter(entry => {
         const entryDate = new Date(entry.timestamp);
         return entryDate >= startDate && entryDate <= endDate;
     });
-    
+
     // Aggregate by day
     const dailyData = [];
     const current = new Date(startDate);
     current.setHours(0, 0, 0, 0);
-    
+
     while (current <= endDate) {
         const dateStr = current.toISOString().split('T')[0];
-        
+
         const dayEntries = filteredEntries.filter(e => {
             const entryDate = new Date(e.timestamp);
             return entryDate.toISOString().split('T')[0] === dateStr;
         });
-        
+
         const beer = dayEntries.filter(e => e.category === 'beer').length;
         const wine = dayEntries.filter(e => e.category === 'wine').length;
         const liquor = dayEntries.filter(e => e.category === 'liquor').length;
         const smoking = dayEntries.filter(e => e.category === 'smoking').length;
         const total = beer + wine + liquor + smoking;
-        
+
         if (total > 0) {
             dailyData.push({
                 date: new Date(current),
@@ -705,23 +715,23 @@ function renderTableView() {
                 total
             });
         }
-        
+
         current.setDate(current.getDate() + 1);
     }
-    
+
     // Render table
     const tbody = document.getElementById('table-body');
-    
+
     if (dailyData.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: #999;">No data for this period</td></tr>';
         return;
     }
-    
+
     tbody.innerHTML = dailyData.reverse().map(day => {
         const dayOfWeek = day.date.getDay();
         const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
         const rowClass = isWeekend ? 'row-weekend' : '';
-        
+
         return `
             <tr class="${rowClass}">
                 <td>${formatTableDate(day.date)}</td>
@@ -748,18 +758,18 @@ function renderOverview() {
     const endDate = new Date();
     endDate.setHours(23, 59, 59, 999); // Include entire current day
     let startDate = new Date();
-    
+
     // Use the same date logic as the chart
     if (currentData.entries.length > 0) {
-        const sortedEntries = [...currentData.entries].sort((a, b) => 
+        const sortedEntries = [...currentData.entries].sort((a, b) =>
             new Date(a.timestamp) - new Date(b.timestamp)
         );
         const firstEntryDate = new Date(sortedEntries[0].timestamp);
         firstEntryDate.setHours(0, 0, 0, 0);
-        
+
         const periodEndDate = new Date(firstEntryDate);
         periodEndDate.setDate(periodEndDate.getDate() + period - 1);
-        
+
         startDate = firstEntryDate;
         if (periodEndDate < endDate) {
             endDate.setTime(periodEndDate.getTime());
@@ -767,24 +777,24 @@ function renderOverview() {
     } else {
         startDate.setDate(startDate.getDate() - period);
     }
-    
+
     // Filter entries by date range
     const filteredEntries = currentData.entries.filter(entry => {
         const entryDate = new Date(entry.timestamp);
         return entryDate >= startDate && entryDate <= endDate;
     });
-    
+
     // Separate weekday and weekend entries
     const weekdayEntries = filteredEntries.filter(entry => {
         const day = new Date(entry.timestamp).getDay();
         return day !== 0 && day !== 6; // Not Sunday (0) or Saturday (6)
     });
-    
+
     const weekendEntries = filteredEntries.filter(entry => {
         const day = new Date(entry.timestamp).getDay();
         return day === 0 || day === 6; // Sunday or Saturday
     });
-    
+
     // Calculate statistics
     const stats = {
         beer: filteredEntries.filter(e => e.category === 'beer').length,
@@ -792,27 +802,27 @@ function renderOverview() {
         liquor: filteredEntries.filter(e => e.category === 'liquor').length,
         smoking: filteredEntries.filter(e => e.category === 'smoking').length
     };
-    
+
     const weekdayStats = {
         beer: weekdayEntries.filter(e => e.category === 'beer').length,
         wine: weekdayEntries.filter(e => e.category === 'wine').length,
         liquor: weekdayEntries.filter(e => e.category === 'liquor').length,
         smoking: weekdayEntries.filter(e => e.category === 'smoking').length
     };
-    
+
     const weekendStats = {
         beer: weekendEntries.filter(e => e.category === 'beer').length,
         wine: weekendEntries.filter(e => e.category === 'wine').length,
         liquor: weekendEntries.filter(e => e.category === 'liquor').length,
         smoking: weekendEntries.filter(e => e.category === 'smoking').length
     };
-    
+
     const total = stats.beer + stats.wine + stats.liquor + stats.smoking;
     const weekdayTotal = weekdayStats.beer + weekdayStats.wine + weekdayStats.liquor + weekdayStats.smoking;
     const weekendTotal = weekendStats.beer + weekendStats.wine + weekendStats.liquor + weekendStats.smoking;
-    
+
     const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-    
+
     // Calculate number of weekdays and weekend days
     let weekdayCount = 0;
     let weekendCount = 0;
@@ -826,7 +836,7 @@ function renderOverview() {
         }
         current.setDate(current.getDate() + 1);
     }
-    
+
     // Calculate averages per category
     const dailyAvg = {
         beer: days > 0 ? (stats.beer / days).toFixed(1) : 0,
@@ -834,7 +844,7 @@ function renderOverview() {
         liquor: days > 0 ? (stats.liquor / days).toFixed(1) : 0,
         smoking: days > 0 ? (stats.smoking / days).toFixed(1) : 0
     };
-    
+
     // Render overview cards
     const container = document.getElementById('overview-grid');
     container.innerHTML = `
