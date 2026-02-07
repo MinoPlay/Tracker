@@ -5,6 +5,7 @@ const LOCAL_DATA_KEY = 'consumption-tracker-local-data';
 const MODE_KEY = 'consumption-tracker-mode';
 const CHART_TYPE_KEY = 'consumption-tracker-chart-type';
 const TIME_PERIOD_KEY = 'consumption-tracker-time-period';
+const CHART_COLLAPSED_KEY = 'consumption-tracker-chart-collapsed';
 
 let config = {
     token: '',
@@ -26,6 +27,7 @@ window.addEventListener('DOMContentLoaded', () => {
     loadConfig();
     loadChartTypePreference();
     loadTimePeriodPreference();
+    loadChartCollapsedPreference();
     updateModeUI();
     if (config.mode === 'local' || isConfigured()) {
         loadData();
@@ -69,6 +71,19 @@ function saveConfig() {
 
 function toggleConfig() {
     document.getElementById('config-section').classList.toggle('collapsed');
+}
+
+function toggleChart() {
+    const section = document.getElementById('chart-section');
+    section.classList.toggle('collapsed');
+    localStorage.setItem(CHART_COLLAPSED_KEY, section.classList.contains('collapsed'));
+}
+
+function loadChartCollapsedPreference() {
+    const isCollapsed = localStorage.getItem(CHART_COLLAPSED_KEY) === 'true';
+    if (isCollapsed) {
+        document.getElementById('chart-section').classList.add('collapsed');
+    }
 }
 
 function isConfigured() {

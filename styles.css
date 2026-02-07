@@ -277,6 +277,27 @@ section h2 {
 }
 
 /* Chart Section */
+.chart-section {
+    transition: all 0.3s ease;
+}
+
+.chart-section.collapsed {
+    padding: 15px 25px;
+}
+
+.chart-section.collapsed .chart-controls,
+.chart-section.collapsed .tab-navigation,
+.chart-section.collapsed .tab-content {
+    display: none;
+}
+
+.chart-section.collapsed h2::after {
+    content: ' (Click to expand)';
+    font-size: 0.7em;
+    color: #888;
+    font-weight: normal;
+}
+
 .chart-header {
     display: flex;
     justify-content: space-between;
