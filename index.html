@@ -13,12 +13,11 @@
 <body>
     <div class="container">
         <header>
-            <h1>📊 Consumption Tracker</h1>
+            <h1 onclick="toggleConfig()" style="cursor: pointer;">📊 Consumption Tracker</h1>
         </header>
 
         <!-- GitHub Configuration -->
-        <section class="config-section" id="config-section">
-            <h2 onclick="toggleConfig()" style="cursor: pointer;">⚙️ Configuration</h2>
+        <div class="config-section" id="config-section">
             <div class="mode-toggle">
                 <button onclick="setMode('local')" class="mode-btn" id="mode-local">🏠 Local Mode</button>
                 <button onclick="setMode('github')" class="mode-btn" id="mode-github">🐙 GitHub Mode</button>
@@ -40,7 +39,7 @@
             <p class="config-help" id="local-help" style="display: none;">
                 Local mode stores data in your browser's localStorage. Data persists between sessions.
             </p>
-        </section>
+        </div>
 
         <!-- Status Messages -->
         <div id="status" class="status hidden"></div>

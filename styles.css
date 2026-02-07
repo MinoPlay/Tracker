@@ -27,6 +27,12 @@ header h1 {
     color: white;
     font-size: 2.5em;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+header h1:hover {
+    transform: scale(1.02);
+    opacity: 0.9;
 }
 
 /* Sections */
@@ -44,27 +50,27 @@ section h2 {
     font-size: 1.5em;
 }
 
-/* Configuration Section */
 .config-section {
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    max-height: 1000px;
+    overflow: hidden;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .config-section.collapsed {
-    padding: 15px 25px;
-}
-
-.config-section.collapsed .config-form,
-.config-section.collapsed .config-help,
-.config-section.collapsed .mode-toggle,
-.config-section.collapsed .local-controls {
-    display: none;
-}
-
-.config-section.collapsed h2::after {
-    content: ' (Click to expand)';
-    font-size: 0.7em;
-    color: #888;
-    font-weight: normal;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    opacity: 0;
+    box-shadow: none;
+    pointer-events: none;
 }
 
 .mode-toggle {
@@ -645,52 +651,52 @@ section h2 {
     header h1 {
         font-size: 2em;
     }
-    
+
     .category-buttons {
         grid-template-columns: 1fr 1fr;
     }
-    
+
     .category-btn {
         padding: 20px;
         font-size: 1.1em;
     }
-    
+
     .chart-container {
         height: 300px;
     }
-    
+
     .chart-header {
         flex-direction: column;
         align-items: stretch;
     }
-    
+
     #time-period {
         width: 100%;
     }
-    
+
     .summary-stats {
         grid-template-columns: 1fr 1fr;
     }
-    
+
     .tab-navigation {
         flex-wrap: wrap;
     }
-    
+
     .tab-btn {
         flex: 1;
         min-width: 100px;
         font-size: 0.9em;
         padding: 10px 15px;
     }
-    
+
     .overview-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .stats-table {
         font-size: 0.85em;
     }
-    
+
     .stats-table th,
     .stats-table td {
         padding: 8px 4px;
@@ -701,15 +707,15 @@ section h2 {
     body {
         padding: 10px;
     }
-    
+
     section {
         padding: 15px;
     }
-    
+
     .category-buttons {
         grid-template-columns: 1fr;
     }
-    
+
     .summary-stats {
         grid-template-columns: 1fr;
     }
