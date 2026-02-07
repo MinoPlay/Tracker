@@ -4,6 +4,7 @@ const DATA_FILE = 'consumption.json';
 const LOCAL_DATA_KEY = 'consumption-tracker-local-data';
 const MODE_KEY = 'consumption-tracker-mode';
 const CHART_TYPE_KEY = 'consumption-tracker-chart-type';
+const TIME_PERIOD_KEY = 'consumption-tracker-time-period';
 
 let config = {
     token: '',
@@ -24,6 +25,7 @@ let chart = null;
 window.addEventListener('DOMContentLoaded', () => {
     loadConfig();
     loadChartTypePreference();
+    loadTimePeriodPreference();
     updateModeUI();
     if (config.mode === 'local' || isConfigured()) {
         loadData();
@@ -85,6 +87,21 @@ function loadChartTypePreference() {
 function updateChartType() {
     const chartType = document.getElementById('chart-type').value;
     localStorage.setItem(CHART_TYPE_KEY, chartType);
+    updateChart();
+}
+
+function loadTimePeriodPreference() {
+    const savedPeriod = localStorage.getItem(TIME_PERIOD_KEY);
+    if (savedPeriod) {
+        document.getElementById('time-period').value = savedPeriod;
+    } else {
+        document.getElementById('time-period').value = '30';
+    }
+}
+
+function updateTimePeriod() {
+    const period = document.getElementById('time-period').value;
+    localStorage.setItem(TIME_PERIOD_KEY, period);
     updateChart();
 }
 
@@ -414,33 +431,20 @@ function getLocalDateString(date) {
 
 // ===== CHART AND STATISTICS =====
 
+function getDateRange(period) {
+    const endDate = new Date();
+    endDate.setHours(23, 59, 59, 999);
+
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - period + 1);
+    startDate.setHours(0, 0, 0, 0);
+
+    return { startDate, endDate };
+}
+
 function updateChart() {
     const period = parseInt(document.getElementById('time-period').value);
-    const endDate = new Date();
-    endDate.setHours(23, 59, 59, 999); // Include entire current day
-    let startDate = new Date();
-
-    // If there are entries, set the start date based on the first entry
-    if (currentData.entries.length > 0) {
-        const sortedEntries = [...currentData.entries].sort((a, b) =>
-            new Date(a.timestamp) - new Date(b.timestamp)
-        );
-        const firstEntryDate = new Date(sortedEntries[0].timestamp);
-        firstEntryDate.setHours(0, 0, 0, 0);
-
-        // Calculate the end of the period from the first entry
-        const periodEndDate = new Date(firstEntryDate);
-        periodEndDate.setDate(periodEndDate.getDate() + period - 1);
-
-        // Use the first entry date as start, and the minimum of period end or today as end
-        startDate = firstEntryDate;
-        if (periodEndDate < endDate) {
-            endDate.setTime(periodEndDate.getTime());
-        }
-    } else {
-        // If no entries, use the default period from today
-        startDate.setDate(startDate.getDate() - period);
-    }
+    const { startDate, endDate } = getDateRange(period);
 
     // Filter entries by date range
     const filteredEntries = currentData.entries.filter(entry => {
@@ -664,28 +668,7 @@ function renderSummaryStats(entries) {
 
 function renderTableView() {
     const period = parseInt(document.getElementById('time-period').value);
-    const endDate = new Date();
-    endDate.setHours(23, 59, 59, 999); // Include entire current day
-    let startDate = new Date();
-
-    // Use the same date logic as the chart
-    if (currentData.entries.length > 0) {
-        const sortedEntries = [...currentData.entries].sort((a, b) =>
-            new Date(a.timestamp) - new Date(b.timestamp)
-        );
-        const firstEntryDate = new Date(sortedEntries[0].timestamp);
-        firstEntryDate.setHours(0, 0, 0, 0);
-
-        const periodEndDate = new Date(firstEntryDate);
-        periodEndDate.setDate(periodEndDate.getDate() + period - 1);
-
-        startDate = firstEntryDate;
-        if (periodEndDate < endDate) {
-            endDate.setTime(periodEndDate.getTime());
-        }
-    } else {
-        startDate.setDate(startDate.getDate() - period);
-    }
+    const { startDate, endDate } = getDateRange(period);
 
     // Filter entries by date range
     const filteredEntries = currentData.entries.filter(entry => {
@@ -762,28 +745,7 @@ function formatTableDate(date) {
 
 function renderOverview() {
     const period = parseInt(document.getElementById('time-period').value);
-    const endDate = new Date();
-    endDate.setHours(23, 59, 59, 999); // Include entire current day
-    let startDate = new Date();
-
-    // Use the same date logic as the chart
-    if (currentData.entries.length > 0) {
-        const sortedEntries = [...currentData.entries].sort((a, b) =>
-            new Date(a.timestamp) - new Date(b.timestamp)
-        );
-        const firstEntryDate = new Date(sortedEntries[0].timestamp);
-        firstEntryDate.setHours(0, 0, 0, 0);
-
-        const periodEndDate = new Date(firstEntryDate);
-        periodEndDate.setDate(periodEndDate.getDate() + period - 1);
-
-        startDate = firstEntryDate;
-        if (periodEndDate < endDate) {
-            endDate.setTime(periodEndDate.getTime());
-        }
-    } else {
-        startDate.setDate(startDate.getDate() - period);
-    }
+    const { startDate, endDate } = getDateRange(period);
 
     // Filter entries by date range
     const filteredEntries = currentData.entries.filter(entry => {
