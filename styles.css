@@ -235,52 +235,57 @@ section h2 {
     border: 1px solid #bee5eb;
 }
 
-/* Category Buttons */
-.category-buttons {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+/* Quick Track Icons in Header */
+.quick-track {
+    display: flex;
+    justify-content: center;
     gap: 15px;
+    margin-top: 15px;
 }
 
-.category-btn {
-    padding: 30px;
-    font-size: 1.3em;
-    font-weight: 600;
-    border: none;
-    border-radius: 12px;
+.track-btn {
+    font-size: 1.8em;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    transition: all 0.3s;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.category-btn:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+.track-btn:hover {
+    transform: translateY(-5px) scale(1.1);
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
-.category-btn:active {
-    transform: translateY(-2px);
+.track-btn:active {
+    transform: scale(0.9);
 }
 
-.category-btn.beer {
-    background: linear-gradient(135deg, #FFB300, #FFA000);
-    color: white;
+.track-btn.beer:hover {
+    background-color: rgba(255, 179, 0, 0.3);
 }
 
-.category-btn.wine {
-    background: linear-gradient(135deg, #C62828, #B71C1C);
-    color: white;
+.track-btn.wine:hover {
+    background-color: rgba(198, 40, 40, 0.3);
 }
 
-.category-btn.liquor {
-    background: linear-gradient(135deg, #FF6F00, #E65100);
-    color: white;
+.track-btn.liquor:hover {
+    background-color: rgba(255, 111, 0, 0.3);
 }
 
-.category-btn.smoking {
-    background: linear-gradient(135deg, #616161, #424242);
-    color: white;
+.track-btn.smoking:hover {
+    background-color: rgba(97, 97, 97, 0.3);
 }
+
 
 /* Chart Section */
 .chart-section {
@@ -729,14 +734,7 @@ section h2 {
         font-size: 2em;
     }
 
-    .category-buttons {
-        grid-template-columns: 1fr 1fr;
-    }
 
-    .category-btn {
-        padding: 20px;
-        font-size: 1.1em;
-    }
 
     .chart-container {
         height: 300px;
@@ -789,9 +787,7 @@ section h2 {
         padding: 15px;
     }
 
-    .category-buttons {
-        grid-template-columns: 1fr;
-    }
+
 
     .summary-stats {
         grid-template-columns: 1fr;

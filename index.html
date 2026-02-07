@@ -14,6 +14,12 @@
     <div class="container">
         <header>
             <h1 onclick="toggleConfig()" style="cursor: pointer;">📊 Consumption Tracker</h1>
+            <div class="quick-track">
+                <button onclick="addEntry('beer')" class="track-btn beer" title="Add Beer">🍺</button>
+                <button onclick="addEntry('wine')" class="track-btn wine" title="Add Wine">🍷</button>
+                <button onclick="addEntry('liquor')" class="track-btn liquor" title="Add Liquor">🥃</button>
+                <button onclick="addEntry('smoking')" class="track-btn smoking" title="Add Hookah">💨</button>
+            </div>
         </header>
 
         <!-- GitHub Configuration -->
@@ -41,27 +47,10 @@
             </p>
         </div>
 
+
         <!-- Status Messages -->
         <div id="status" class="status hidden"></div>
 
-        <!-- Category Buttons -->
-        <section class="tracking-section">
-            <h2>Track Consumption</h2>
-            <div class="category-buttons">
-                <button onclick="addEntry('beer')" class="category-btn beer">
-                    🍺 Beer
-                </button>
-                <button onclick="addEntry('wine')" class="category-btn wine">
-                    🍷 Wine
-                </button>
-                <button onclick="addEntry('liquor')" class="category-btn liquor">
-                    🥃 Liquor
-                </button>
-                <button onclick="addEntry('smoking')" class="category-btn smoking">
-                    💨 Hookah
-                </button>
-            </div>
-        </section>
 
         <!-- Statistics Section with Tabs -->
         <section class="chart-section" id="chart-section">
