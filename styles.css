@@ -562,8 +562,9 @@ section h2 {
 
 /* History Section */
 .entries-list {
-    max-height: 500px;
+    max-height: 600px;
     overflow-y: auto;
+    padding-right: 5px;
 }
 
 .empty-message {
@@ -625,6 +626,82 @@ section h2 {
 .btn-delete:hover {
     background: #c82333;
     transform: scale(1.05);
+}
+
+/* Date Groups in History */
+.date-group {
+    margin-bottom: 15px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.date-header {
+    background: #f1f3f9;
+    padding: 12px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+}
+
+.date-header:hover {
+    background: #e4e8f0;
+}
+
+.date-title {
+    font-weight: 700;
+    color: #444;
+    font-size: 0.95em;
+}
+
+.date-count {
+    font-size: 0.85em;
+    color: #888;
+    background: #fff;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-left: auto;
+    margin-right: 15px;
+}
+
+.toggle-icon {
+    font-size: 0.8em;
+    color: #667eea;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.date-group.collapsed .toggle-icon {
+    transform: rotate(-90deg);
+}
+
+.date-entries {
+    padding: 10px;
+    transition: all 0.3s ease;
+    max-height: 2000px;
+    opacity: 1;
+}
+
+.date-group.collapsed .date-entries {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    opacity: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.date-group .entry-item {
+    margin-bottom: 5px;
+    border-left-width: 3px;
+    padding: 8px 12px;
+}
+
+.date-group .entry-item:last-child {
+    margin-bottom: 0;
 }
 
 /* Scrollbar Styling */

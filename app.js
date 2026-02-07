@@ -391,31 +391,85 @@ function renderEntries() {
         new Date(b.timestamp) - new Date(a.timestamp)
     );
 
-    container.innerHTML = sortedEntries.map(entry => {
-        const date = new Date(entry.timestamp);
-        const formatted = formatDateTime(date);
-        const emoji = getCategoryEmoji(entry.category);
-        const categoryName = getCategoryDisplayName(entry.category);
+    // Group by date
+    const groups = {};
+    sortedEntries.forEach(entry => {
+        const dateStr = getLocalDateString(new Date(entry.timestamp));
+        if (!groups[dateStr]) {
+            groups[dateStr] = [];
+        }
+        groups[dateStr].push(entry);
+    });
+
+    const sortedDates = Object.keys(groups).sort((a, b) => new Date(b) - new Date(a));
+    const todayStr = getLocalDateString(new Date());
+
+    container.innerHTML = sortedDates.map(dateStr => {
+        const entries = groups[dateStr];
+        const isToday = dateStr === todayStr;
+        const dateHeader = formatDateHeader(new Date(dateStr));
+        const isCollapsed = !isToday;
+
+        const entriesHtml = entries.map(entry => {
+            const date = new Date(entry.timestamp);
+            const timeFormatted = formatTime(date);
+            const emoji = getCategoryEmoji(entry.category);
+            const categoryName = getCategoryDisplayName(entry.category);
+
+            return `
+                <div class="entry-item ${entry.category}">
+                    <span class="entry-text">${emoji} ${categoryName} - ${timeFormatted}</span>
+                    <button onclick="deleteEntry('${entry.id}')" class="btn-delete">Delete</button>
+                </div>
+            `;
+        }).join('');
 
         return `
-            <div class="entry-item ${entry.category}">
-                <span class="entry-text">${emoji} ${categoryName} - ${formatted}</span>
-                <button onclick="deleteEntry('${entry.id}')" class="btn-delete">Delete</button>
+            <div class="date-group ${isCollapsed ? 'collapsed' : ''}" id="group-${dateStr}">
+                <div class="date-header" onclick="toggleDateGroup('${dateStr}')">
+                    <span class="date-title">${dateHeader}</span>
+                    <span class="date-count">${entries.length} ${entries.length === 1 ? 'entry' : 'entries'}</span>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="date-entries">
+                    ${entriesHtml}
+                </div>
             </div>
         `;
     }).join('');
 }
 
-function formatDateTime(date) {
+function formatDateHeader(date) {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const month = months[date.getMonth()];
-    const day = date.getDate();
-    const year = date.getFullYear();
+
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+
+    const dateStr = getLocalDateString(date);
+    const todayStr = getLocalDateString(today);
+    const yesterdayStr = getLocalDateString(yesterday);
+
+    if (dateStr === todayStr) return 'Today';
+    if (dateStr === yesterdayStr) return 'Yesterday';
+
+    return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+}
+
+function formatTime(date) {
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
-
-    return `${month} ${day}, ${year} ${hours}:${minutes}`;
+    return `${hours}:${minutes}`;
 }
+
+function toggleDateGroup(dateStr) {
+    const group = document.getElementById(`group-${dateStr}`);
+    if (group) {
+        group.classList.toggle('collapsed');
+    }
+}
+
 
 function getCategoryEmoji(category) {
     const emojis = {
