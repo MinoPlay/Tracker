@@ -734,125 +734,136 @@ function renderSummaryStats(entries) {
 // ===== OVERVIEW VIEW =====
 
 function renderOverview() {
-    const period = parseInt(document.getElementById('time-period').value);
-    const { startDate, endDate } = getDateRange(period);
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
 
-    // Filter entries by date range
-    const filteredEntries = currentData.entries.filter(entry => {
-        const entryDate = new Date(entry.timestamp);
-        return entryDate >= startDate && entryDate <= endDate;
-    });
+    // Current Week (Last 7 days)
+    const currentWeekEnd = new Date(today);
+    const currentWeekStart = new Date(today);
+    currentWeekStart.setDate(today.getDate() - 6);
+    currentWeekStart.setHours(0, 0, 0, 0);
 
-    // Separate weekday and weekend entries
-    const weekdayEntries = filteredEntries.filter(entry => {
-        const day = new Date(entry.timestamp).getDay();
-        return day !== 0 && day !== 6; // Not Sunday (0) or Saturday (6)
-    });
+    // Previous Week (7 days before)
+    const previousWeekEnd = new Date(currentWeekStart);
+    previousWeekEnd.setDate(currentWeekStart.getDate() - 1);
+    previousWeekEnd.setHours(23, 59, 59, 999);
+    const previousWeekStart = new Date(previousWeekEnd);
+    previousWeekStart.setDate(previousWeekEnd.getDate() - 6);
+    previousWeekStart.setHours(0, 0, 0, 0);
 
-    const weekendEntries = filteredEntries.filter(entry => {
-        const day = new Date(entry.timestamp).getDay();
-        return day === 0 || day === 6; // Sunday or Saturday
-    });
-
-    // Calculate statistics
-    const stats = {
-        beer: filteredEntries.filter(e => e.category === 'beer').length,
-        wine: filteredEntries.filter(e => e.category === 'wine').length,
-        liquor: filteredEntries.filter(e => e.category === 'liquor').length,
-        smoking: filteredEntries.filter(e => e.category === 'smoking').length
+    const categories = {
+        drinking: ['beer', 'wine', 'liquor'],
+        hookah: ['smoking']
     };
 
-    const weekdayStats = {
-        beer: weekdayEntries.filter(e => e.category === 'beer').length,
-        wine: weekdayEntries.filter(e => e.category === 'wine').length,
-        liquor: weekdayEntries.filter(e => e.category === 'liquor').length,
-        smoking: weekdayEntries.filter(e => e.category === 'smoking').length
-    };
+    function getStats(startDate, endDate, categoryList) {
+        const filtered = currentData.entries.filter(entry => {
+            const d = new Date(entry.timestamp);
+            return d >= startDate && d <= endDate && categoryList.includes(entry.category);
+        });
 
-    const weekendStats = {
-        beer: weekendEntries.filter(e => e.category === 'beer').length,
-        wine: weekendEntries.filter(e => e.category === 'wine').length,
-        liquor: weekendEntries.filter(e => e.category === 'liquor').length,
-        smoking: weekendEntries.filter(e => e.category === 'smoking').length
-    };
+        const weekdays = filtered.filter(entry => {
+            const day = new Date(entry.timestamp).getDay();
+            return day !== 0 && day !== 6;
+        });
 
-    const total = stats.beer + stats.wine + stats.liquor + stats.smoking;
-    const weekdayTotal = weekdayStats.beer + weekdayStats.wine + weekdayStats.liquor + weekdayStats.smoking;
-    const weekendTotal = weekendStats.beer + weekendStats.wine + weekendStats.liquor + weekendStats.smoking;
+        const weekends = filtered.filter(entry => {
+            const day = new Date(entry.timestamp).getDay();
+            return day === 0 || day === 6;
+        });
 
-    const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-
-    // Calculate number of weekdays and weekend days
-    let weekdayCount = 0;
-    let weekendCount = 0;
-    const current = new Date(startDate);
-    while (current <= endDate) {
-        const day = current.getDay();
-        if (day === 0 || day === 6) {
-            weekendCount++;
-        } else {
-            weekdayCount++;
-        }
-        current.setDate(current.getDate() + 1);
+        return {
+            total: filtered.length,
+            weekdays: weekdays.length,
+            weekends: weekends.length
+        };
     }
 
-    // Calculate averages per category
-    const dailyAvg = {
-        beer: days > 0 ? (stats.beer / days).toFixed(1) : 0,
-        wine: days > 0 ? (stats.wine / days).toFixed(1) : 0,
-        liquor: days > 0 ? (stats.liquor / days).toFixed(1) : 0,
-        smoking: days > 0 ? (stats.smoking / days).toFixed(1) : 0
+    const drinkingStats = {
+        current: getStats(currentWeekStart, currentWeekEnd, categories.drinking),
+        previous: getStats(previousWeekStart, previousWeekEnd, categories.drinking)
     };
 
-    // Render overview cards
+    const hookahStats = {
+        current: getStats(currentWeekStart, currentWeekEnd, categories.hookah),
+        previous: getStats(previousWeekStart, previousWeekEnd, categories.hookah)
+    };
+
+    function calculateChange(current, previous) {
+        if (previous === 0) return current > 0 ? 100 : 0;
+        return ((current - previous) / previous) * 100;
+    }
+
+    function renderChangeTag(current, previous) {
+        const change = calculateChange(current, previous);
+        const isBetter = change < 0; // Less consumption is better
+        const isWorse = change > 0;
+        const absChange = Math.abs(change).toFixed(0);
+
+        let statusClass = 'neutral';
+        let icon = '•';
+        if (isBetter) {
+            statusClass = 'success';
+            icon = '↓';
+        } else if (isWorse) {
+            statusClass = 'danger';
+            icon = '↑';
+        }
+
+        return `
+            <div class="change-tag ${statusClass}">
+                <span class="icon">${icon}</span>
+                ${absChange}% vs prev. week
+            </div>
+        `;
+    }
+
+    function formatDateRange(start, end) {
+        const options = { month: 'short', day: 'numeric' };
+        return `${start.toLocaleDateString(undefined, options)} - ${end.toLocaleDateString(undefined, options)}`;
+    }
+
+    const dateRangeText = `${formatDateRange(currentWeekStart, currentWeekEnd)} vs ${formatDateRange(previousWeekStart, previousWeekEnd)}`;
+
+    function generateSectionHtml(title, emoji, stats, typeClass) {
+        return `
+            <div class="category-stats-group ${typeClass}">
+                <div class="group-header">
+                    <h2>${emoji} ${title} Overview</h2>
+                    <p class="date-range-sub">${dateRangeText}</p>
+                </div>
+                <div class="stats-main-grid">
+                    <div class="main-stat-card">
+                        <div class="label">Total Units (7d)</div>
+                        <div class="value">${stats.current.total}</div>
+                        ${renderChangeTag(stats.current.total, stats.previous.total)}
+                    </div>
+                    <div class="comparison-grid">
+                        <div class="comparison-card">
+                            <div class="label">Weekdays</div>
+                            <div class="current-value">${stats.current.weekdays}</div>
+                            ${renderChangeTag(stats.current.weekdays, stats.previous.weekdays)}
+                        </div>
+                        <div class="comparison-card">
+                            <div class="label">Weekends</div>
+                            <div class="current-value">${stats.current.weekends}</div>
+                            ${renderChangeTag(stats.current.weekends, stats.previous.weekends)}
+                        </div>
+                        <div class="comparison-card">
+                            <div class="label">Units/Day Avg</div>
+                            <div class="current-value">${(stats.current.total / 7).toFixed(1)}</div>
+                            ${renderChangeTag(stats.current.total / 7, stats.previous.total / 7)}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
     const container = document.getElementById('overview-grid');
+    container.className = 'overview-sections'; // Update class for new layout
     container.innerHTML = `
-        <div class="overview-card beer">
-            <h3>🍺 Beer</h3>
-            <div class="value">${stats.beer}</div>
-            <div class="label">${dailyAvg.beer} per day average</div>
-        </div>
-        
-        <div class="overview-card wine">
-            <h3>🍷 Wine</h3>
-            <div class="value">${stats.wine}</div>
-            <div class="label">${dailyAvg.wine} per day average</div>
-        </div>
-        
-        <div class="overview-card liquor">
-            <h3>🥃 Liquor</h3>
-            <div class="value">${stats.liquor}</div>
-            <div class="label">${dailyAvg.liquor} per day average</div>
-        </div>
-        
-        <div class="overview-card smoking">
-            <h3>💨 Hookah</h3>
-            <div class="value">${stats.smoking}</div>
-            <div class="label">${dailyAvg.smoking} per day average</div>
-        </div>
-        
-        <div class="overview-card total">
-            <h3>Total Consumption</h3>
-            <div class="value">${total}</div>
-            <div class="label">${days} days tracked</div>
-        </div>
-        
-        <div class="overview-card weekday">
-            <h3>📅 Weekdays</h3>
-            <div class="value">${weekdayTotal}</div>
-            <div class="label">${weekdayCount} days · ${(weekdayTotal / (weekdayCount || 1)).toFixed(1)} per day</div>
-            <div class="breakdown">
-                🍺 ${weekdayStats.beer} · 🍷 ${weekdayStats.wine} · 🥃 ${weekdayStats.liquor} · 💨 ${weekdayStats.smoking}
-            </div>
-        </div>
-        
-        <div class="overview-card weekend">
-            <h3>🎉 Weekend</h3>
-            <div class="value">${weekendTotal}</div>
-            <div class="label">${weekendCount} days · ${(weekendTotal / (weekendCount || 1)).toFixed(1)} per day</div>
-            <div class="breakdown">
-                🍺 ${weekendStats.beer} · 🍷 ${weekendStats.wine} · 🥃 ${weekendStats.liquor} · 💨 ${weekendStats.smoking}
-            </div>
-        </div>
+        ${generateSectionHtml('Drinking', '🍷', drinkingStats, 'drinking')}
+        ${generateSectionHtml('Hookah', '💨', hookahStats, 'hookah')}
     `;
 }
