@@ -756,6 +756,15 @@ function renderOverview() {
     previousWeekEnd.setDate(previousWeekStart.getDate() + 6);
     previousWeekEnd.setHours(23, 59, 59, 999);
 
+    // Get week before previous (Monday to Sunday)
+    const weekBeforePreviousStart = new Date(previousWeekStart);
+    weekBeforePreviousStart.setDate(previousWeekStart.getDate() - 7);
+    weekBeforePreviousStart.setHours(0, 0, 0, 0);
+
+    const weekBeforePreviousEnd = new Date(weekBeforePreviousStart);
+    weekBeforePreviousEnd.setDate(weekBeforePreviousStart.getDate() + 6);
+    weekBeforePreviousEnd.setHours(23, 59, 59, 999);
+
     const categories = {
         drinking: ['beer', 'wine', 'liquor'],
         hookah: ['smoking']
@@ -786,12 +795,14 @@ function renderOverview() {
 
     const drinkingStats = {
         current: getStats(currentWeekStart, currentWeekEnd, categories.drinking),
-        previous: getStats(previousWeekStart, previousWeekEnd, categories.drinking)
+        previous: getStats(previousWeekStart, previousWeekEnd, categories.drinking),
+        weekBeforePrevious: getStats(weekBeforePreviousStart, weekBeforePreviousEnd, categories.drinking)
     };
 
     const hookahStats = {
         current: getStats(currentWeekStart, currentWeekEnd, categories.hookah),
-        previous: getStats(previousWeekStart, previousWeekEnd, categories.hookah)
+        previous: getStats(previousWeekStart, previousWeekEnd, categories.hookah),
+        weekBeforePrevious: getStats(weekBeforePreviousStart, weekBeforePreviousEnd, categories.hookah)
     };
 
     function calculateChange(current, previous) {
@@ -799,7 +810,7 @@ function renderOverview() {
         return ((current - previous) / previous) * 100;
     }
 
-    function renderChangeTag(current, previous) {
+    function renderChangeTag(current, previous, compact = false) {
         const change = calculateChange(current, previous);
         const isBetter = change < 0; // Less consumption is better
         const isWorse = change > 0;
@@ -818,7 +829,7 @@ function renderOverview() {
         return `
             <div class="change-tag ${statusClass}">
                 <span class="icon">${icon}</span>
-                ${absChange}% vs prev. week
+                ${absChange}% ${compact ? '' : 'vs prev.'}
             </div>
         `;
     }
@@ -828,14 +839,18 @@ function renderOverview() {
         return `${start.toLocaleDateString(undefined, options)} - ${end.toLocaleDateString(undefined, options)}`;
     }
 
-    const dateRangeText = `${formatDateRange(currentWeekStart, currentWeekEnd)} vs ${formatDateRange(previousWeekStart, previousWeekEnd)}`;
+    const currentVsPrevText = `${formatDateRange(currentWeekStart, currentWeekEnd)} vs ${formatDateRange(previousWeekStart, previousWeekEnd)}`;
+    const prevVsBeforeTrendText = `${formatDateRange(previousWeekStart, previousWeekEnd)} vs ${formatDateRange(weekBeforePreviousStart, weekBeforePreviousEnd)}`;
 
     function generateSectionHtml(title, emoji, stats, typeClass) {
+        // Only show historical trend if there's any data in those weeks (or if user requested)
+        const hasHistory = stats.previous.total > 0 || stats.weekBeforePrevious.total > 0;
+
         return `
             <div class="category-stats-group ${typeClass}">
                 <div class="group-header">
                     <h2>${emoji} ${title} Overview</h2>
-                    <p class="date-range-sub">${dateRangeText}</p>
+                    <p class="date-range-sub">${currentVsPrevText}</p>
                 </div>
                 <div class="stats-main-grid">
                     <div class="main-stat-card">
@@ -861,6 +876,34 @@ function renderOverview() {
                         </div>
                     </div>
                 </div>
+
+                ${hasHistory ? `
+                <div class="secondary-comparison-row">
+                    <div class="row-label">Historical Trend: ${prevVsBeforeTrendText}</div>
+                    <div class="trend-grid">
+                        <div class="trend-card">
+                            <div class="label">Prev. Week Total</div>
+                            <div class="value">${stats.previous.total}</div>
+                            ${renderChangeTag(stats.previous.total, stats.weekBeforePrevious.total, true)}
+                        </div>
+                        <div class="trend-card">
+                            <div class="label">Prev. Weekdays</div>
+                            <div class="value">${stats.previous.weekdays}</div>
+                            ${renderChangeTag(stats.previous.weekdays, stats.weekBeforePrevious.weekdays, true)}
+                        </div>
+                        <div class="trend-card">
+                            <div class="label">Prev. Weekends</div>
+                            <div class="value">${stats.previous.weekends}</div>
+                            ${renderChangeTag(stats.previous.weekends, stats.weekBeforePrevious.weekends, true)}
+                        </div>
+                        <div class="trend-card">
+                            <div class="label">Prev. Units/Day</div>
+                            <div class="value">${(stats.previous.total / 7).toFixed(1)}</div>
+                            ${renderChangeTag(stats.previous.total / 7, stats.weekBeforePrevious.total / 7, true)}
+                        </div>
+                    </div>
+                </div>
+                ` : ''}
             </div>
         `;
     }

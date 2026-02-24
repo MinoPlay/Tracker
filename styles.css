@@ -576,18 +576,71 @@ section h2 {
     border-top: 4px solid #616161;
 }
 
+.secondary-comparison-row {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px dashed #eee;
+}
+
+.secondary-comparison-row .row-label {
+    font-size: 0.8em;
+    font-weight: 700;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+}
+
+.trend-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.trend-card {
+    background: #fdfdfd;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.trend-card .label {
+    font-size: 0.75em;
+    color: #777;
+}
+
+.trend-card .value {
+    font-size: 1.1em;
+    font-weight: 700;
+    color: #444;
+}
+
+.trend-card .change-tag {
+    font-size: 0.7em;
+    padding: 2px 6px;
+}
+
 @media (max-width: 992px) {
-    .stats-main-grid {
-        grid-template-columns: 1fr;
+    .trend-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 
-    .comparison-grid {
-        grid-template-columns: repeat(3, 1fr);
+    .stats-main-grid {
+        grid-template-columns: 1fr;
     }
 }
 
 @media (max-width: 600px) {
     .comparison-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .trend-grid {
         grid-template-columns: 1fr;
     }
 }
