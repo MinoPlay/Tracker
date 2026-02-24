@@ -357,9 +357,7 @@ function switchTab(tabName) {
     document.getElementById(`tab-${tabName}`).classList.add('active');
 
     // Render the content for the selected tab
-    if (tabName === 'table') {
-        renderTableView();
-    } else if (tabName === 'overview') {
+    if (tabName === 'overview') {
         renderOverview();
     }
 }
@@ -371,9 +369,7 @@ function renderAll() {
     updateChart();
     // Re-render active tab content
     const activeTab = document.querySelector('.tab-btn.active');
-    if (activeTab && activeTab.textContent.includes('Table')) {
-        renderTableView();
-    } else if (activeTab && activeTab.textContent.includes('Overview')) {
+    if (activeTab && activeTab.textContent.includes('Overview')) {
         renderOverview();
     }
 }
@@ -733,82 +729,7 @@ function renderSummaryStats(entries) {
         </div>
     `;
 }
-// ===== TABLE VIEW =====
 
-function renderTableView() {
-    const period = parseInt(document.getElementById('time-period').value);
-    const { startDate, endDate } = getDateRange(period);
-
-    // Filter entries by date range
-    const filteredEntries = currentData.entries.filter(entry => {
-        const entryDate = new Date(entry.timestamp);
-        return entryDate >= startDate && entryDate <= endDate;
-    });
-
-    // Aggregate by day
-    const dailyData = [];
-    const current = new Date(startDate);
-    current.setHours(0, 0, 0, 0);
-
-    while (current <= endDate) {
-        const dateStr = getLocalDateString(current);
-
-        const dayEntries = filteredEntries.filter(e => {
-            const entryDate = new Date(e.timestamp);
-            return getLocalDateString(entryDate) === dateStr;
-        });
-
-        const beer = dayEntries.filter(e => e.category === 'beer').length;
-        const wine = dayEntries.filter(e => e.category === 'wine').length;
-        const liquor = dayEntries.filter(e => e.category === 'liquor').length;
-        const smoking = dayEntries.filter(e => e.category === 'smoking').length;
-        const total = beer + wine + liquor + smoking;
-
-        if (total > 0) {
-            dailyData.push({
-                date: new Date(current),
-                beer,
-                wine,
-                liquor,
-                smoking,
-                total
-            });
-        }
-
-        current.setDate(current.getDate() + 1);
-    }
-
-    // Render table
-    const tbody = document.getElementById('table-body');
-
-    if (dailyData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: #999;">No data for this period</td></tr>';
-        return;
-    }
-
-    tbody.innerHTML = dailyData.reverse().map(day => {
-        const dayOfWeek = day.date.getDay();
-        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-        const rowClass = isWeekend ? 'row-weekend' : '';
-
-        return `
-            <tr class="${rowClass}">
-                <td>${formatTableDate(day.date)}</td>
-                <td>${day.beer || '-'}</td>
-                <td>${day.wine || '-'}</td>
-                <td>${day.liquor || '-'}</td>
-                <td>${day.smoking || '-'}</td>
-                <td class="total-cell">${day.total}</td>
-            </tr>
-        `;
-    }).join('');
-}
-
-function formatTableDate(date) {
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
-}
 
 // ===== OVERVIEW VIEW =====
 
