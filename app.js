@@ -735,21 +735,26 @@ function renderSummaryStats(entries) {
 
 function renderOverview() {
     const today = new Date();
-    today.setHours(23, 59, 59, 999);
 
-    // Current Week (Last 7 days)
-    const currentWeekEnd = new Date(today);
+    // Get current week (Monday to Sunday)
     const currentWeekStart = new Date(today);
-    currentWeekStart.setDate(today.getDate() - 6);
+    const day = today.getDay();
+    const diff = (day === 0 ? -6 : 1 - day); // Adjust for Sunday (0) being at the end of the week
+    currentWeekStart.setDate(today.getDate() + diff);
     currentWeekStart.setHours(0, 0, 0, 0);
 
-    // Previous Week (7 days before)
-    const previousWeekEnd = new Date(currentWeekStart);
-    previousWeekEnd.setDate(currentWeekStart.getDate() - 1);
-    previousWeekEnd.setHours(23, 59, 59, 999);
-    const previousWeekStart = new Date(previousWeekEnd);
-    previousWeekStart.setDate(previousWeekEnd.getDate() - 6);
+    const currentWeekEnd = new Date(currentWeekStart);
+    currentWeekEnd.setDate(currentWeekStart.getDate() + 6);
+    currentWeekEnd.setHours(23, 59, 59, 999);
+
+    // Get previous week (Monday to Sunday)
+    const previousWeekStart = new Date(currentWeekStart);
+    previousWeekStart.setDate(currentWeekStart.getDate() - 7);
     previousWeekStart.setHours(0, 0, 0, 0);
+
+    const previousWeekEnd = new Date(previousWeekStart);
+    previousWeekEnd.setDate(previousWeekStart.getDate() + 6);
+    previousWeekEnd.setHours(23, 59, 59, 999);
 
     const categories = {
         drinking: ['beer', 'wine', 'liquor'],
@@ -834,7 +839,7 @@ function renderOverview() {
                 </div>
                 <div class="stats-main-grid">
                     <div class="main-stat-card">
-                        <div class="label">Total Units (7d)</div>
+                        <div class="label">Current Week Total</div>
                         <div class="value">${stats.current.total}</div>
                         ${renderChangeTag(stats.current.total, stats.previous.total)}
                     </div>
