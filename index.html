@@ -5,9 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consumption Tracker</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/date-fns@3.0.0/index.min.js"></script>
 </head>
 
 <body>
@@ -73,7 +74,6 @@
             <!-- Tab Navigation -->
             <div class="tab-navigation">
                 <button class="tab-btn active" onclick="switchTab('chart')">📊 Chart</button>
-                <button class="tab-btn" onclick="switchTab('table')">📋 Table</button>
                 <button class="tab-btn" onclick="switchTab('overview')">📈 Overview</button>
             </div>
 
@@ -85,25 +85,7 @@
                 <div class="summary-stats" id="summary-stats"></div>
             </div>
 
-            <!-- Tab Content: Table View -->
-            <div id="tab-table" class="tab-content">
-                <div class="table-container">
-                    <table id="stats-table" class="stats-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>🍺 Beer</th>
-                                <th>🍷 Wine</th>
-                                <th>🥃 Liquor</th>
-                                <th>💨 Hookah</th>
-                                <th>Total</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-body">
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+
 
             <!-- Tab Content: Overview -->
             <div id="tab-overview" class="tab-content">
