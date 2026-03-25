@@ -1,0 +1,31 @@
+name: Bump PWA Version
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  bump-version:
+    # Skip commits made by this workflow to prevent infinite loops
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bump CACHE_NAME with short SHA
+        run: |
+          SHORT_SHA="${{ github.sha }}"
+          SHORT_SHA="${SHORT_SHA:0:7}"
+          sed -i "s/const CACHE_NAME = '[^']*'/const CACHE_NAME = 'consumption-tracker-${SHORT_SHA}'/" sw.js
+          echo "Updated CACHE_NAME to consumption-tracker-${SHORT_SHA}"
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add sw.js
+          git diff --cached --quiet || git commit -m "chore: bump PWA cache version [skip ci]"
+          git push
