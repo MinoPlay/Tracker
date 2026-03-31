@@ -9,6 +9,7 @@ body {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
     padding: 20px;
+    padding-bottom: 100px;
     color: #333;
 }
 
@@ -235,12 +236,26 @@ section h2 {
     border: 1px solid #bee5eb;
 }
 
-/* Quick Track Icons in Header */
+/* Quick Track Footer */
+.quick-track-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
+    backdrop-filter: blur(12px);
+    padding: 12px 20px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Quick Track Icons in Footer */
 .quick-track {
     display: flex;
     justify-content: center;
     gap: 15px;
-    margin-top: 15px;
+    margin-top: 0;
 }
 
 .track-btn {

@@ -25,12 +25,6 @@
     <div class="container">
         <header>
             <h1 onclick="toggleConfig()" style="cursor: pointer;">📊 Consumption Tracker</h1>
-            <div class="quick-track">
-                <button onclick="addEntry('beer')" class="track-btn beer" title="Add Beer">🍺</button>
-                <button onclick="addEntry('wine')" class="track-btn wine" title="Add Wine">🍷</button>
-                <button onclick="addEntry('liquor')" class="track-btn liquor" title="Add Liquor">🥃</button>
-                <button onclick="addEntry('smoking')" class="track-btn smoking" title="Add Hookah">💨</button>
-            </div>
         </header>
 
         <!-- GitHub Configuration -->
@@ -112,6 +106,15 @@
             </div>
         </section>
     </div>
+
+    <footer class="quick-track-footer">
+        <div class="quick-track">
+            <button onclick="addEntry('beer')" class="track-btn beer" title="Add Beer">🍺</button>
+            <button onclick="addEntry('wine')" class="track-btn wine" title="Add Wine">🍷</button>
+            <button onclick="addEntry('liquor')" class="track-btn liquor" title="Add Liquor">🥃</button>
+            <button onclick="addEntry('smoking')" class="track-btn smoking" title="Add Hookah">💨</button>
+        </div>
+    </footer>
 
     <script src="app.js"></script>
     <script>
