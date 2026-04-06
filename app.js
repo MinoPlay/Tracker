@@ -343,6 +343,66 @@ async function deleteEntry(id) {
 
     const updatedEntries = currentData.entries.filter(e => e.id !== id);
     await saveData(updatedEntries);
+    if (currentModalDate) renderDayModalEntries(currentModalDate);
+}
+
+// ===== DAY MODAL =====
+
+let currentModalDate = null;
+
+function openDayModal(dateStr) {
+    currentModalDate = dateStr;
+    const date = new Date(dateStr + 'T12:00:00');
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    document.getElementById('day-modal-title').textContent =
+        `${days[date.getDay()]}, ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+    renderDayModalEntries(dateStr);
+    document.getElementById('day-modal-overlay').classList.add('open');
+}
+
+function renderDayModalEntries(dateStr) {
+    const entries = currentData.entries
+        .filter(e => getLocalDateString(new Date(e.timestamp)) === dateStr)
+        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+    const container = document.getElementById('day-modal-entries');
+    if (entries.length === 0) {
+        container.innerHTML = '<p class="modal-empty">No entries for this day.</p>';
+        return;
+    }
+    container.innerHTML = entries.map(entry => `
+        <div class="modal-entry ${entry.category}">
+            <span>${getCategoryEmoji(entry.category)} ${getCategoryDisplayName(entry.category)} &ndash; ${formatTime(new Date(entry.timestamp))}</span>
+            <button onclick="deleteEntry('${entry.id}')" class="btn-delete">✕</button>
+        </div>
+    `).join('');
+}
+
+function closeDayModal(event) {
+    if (event && event.target !== document.getElementById('day-modal-overlay')) return;
+    document.getElementById('day-modal-overlay').classList.remove('open');
+    currentModalDate = null;
+}
+
+async function addEntryForDate(category) {
+    if (config.mode !== 'local' && !isConfigured()) {
+        showStatus('Please configure GitHub settings first', 'error');
+        return;
+    }
+    const dateStr = currentModalDate;
+    const todayStr = getLocalDateString(new Date());
+    let timestamp;
+    if (dateStr === todayStr) {
+        timestamp = new Date().toISOString();
+    } else {
+        // Use noon of the selected day
+        timestamp = new Date(dateStr + 'T12:00:00').toISOString();
+    }
+    const entry = { id: Date.now().toString(), timestamp, category };
+    const updatedEntries = [...currentData.entries, entry];
+    await saveData(updatedEntries);
+    renderDayModalEntries(dateStr);
 }
 
 // ===== TAB MANAGEMENT =====
@@ -374,6 +434,15 @@ function renderAll() {
     }
 }
 
+function getWeekStart(date) {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = day === 0 ? -6 : 1 - day; // Monday = start
+    d.setDate(d.getDate() + diff);
+    d.setHours(0, 0, 0, 0);
+    return d;
+}
+
 function renderEntries() {
     const container = document.getElementById('entries-list');
 
@@ -382,75 +451,99 @@ function renderEntries() {
         return;
     }
 
-    // Sort by timestamp, newest first
-    const sortedEntries = [...currentData.entries].sort((a, b) =>
-        new Date(b.timestamp) - new Date(a.timestamp)
-    );
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const todayStr = getLocalDateString(new Date());
+    const currentWeekKey = getLocalDateString(getWeekStart(new Date()));
 
-    // Group by date
-    const groups = {};
-    sortedEntries.forEach(entry => {
-        const dateStr = getLocalDateString(new Date(entry.timestamp));
-        if (!groups[dateStr]) {
-            groups[dateStr] = [];
+    // Group entries by week
+    const weekGroups = {};
+    currentData.entries.forEach(entry => {
+        const weekStart = getWeekStart(new Date(entry.timestamp));
+        const weekKey = getLocalDateString(weekStart);
+        if (!weekGroups[weekKey]) {
+            weekGroups[weekKey] = { weekStart, entries: [] };
         }
-        groups[dateStr].push(entry);
+        weekGroups[weekKey].entries.push(entry);
     });
 
-    const sortedDates = Object.keys(groups).sort((a, b) => new Date(b) - new Date(a));
-    const todayStr = getLocalDateString(new Date());
+    const sortedWeeks = Object.keys(weekGroups).sort((a, b) => new Date(b) - new Date(a));
 
-    container.innerHTML = sortedDates.map(dateStr => {
-        const entries = groups[dateStr];
-        const isToday = dateStr === todayStr;
-        const dateHeader = formatDateHeader(new Date(dateStr));
-        const isCollapsed = !isToday;
+    container.innerHTML = sortedWeeks.map(weekKey => {
+        const { weekStart, entries } = weekGroups[weekKey];
+        const isCurrentWeek = weekKey === currentWeekKey;
+        const isCollapsed = !isCurrentWeek;
 
-        const entriesHtml = entries.map(entry => {
-            const date = new Date(entry.timestamp);
-            const timeFormatted = formatTime(date);
-            const emoji = getCategoryEmoji(entry.category);
-            const categoryName = getCategoryDisplayName(entry.category);
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        const weekLabel = `${months[weekStart.getMonth()]} ${weekStart.getDate()} – ${months[weekEnd.getMonth()]} ${weekEnd.getDate()}, ${weekEnd.getFullYear()}`;
+
+        // Week-level category counts for header summary
+        const weekCounts = { beer: 0, wine: 0, liquor: 0, smoking: 0 };
+        entries.forEach(e => { if (weekCounts[e.category] !== undefined) weekCounts[e.category]++; });
+        const weekSummary = buildCategorySummary(weekCounts);
+
+        // Build day map for the 7 days of this week
+        const dayMap = {};
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(weekStart);
+            d.setDate(weekStart.getDate() + i);
+            dayMap[getLocalDateString(d)] = { date: d, entries: [] };
+        }
+        entries.forEach(entry => {
+            const key = getLocalDateString(new Date(entry.timestamp));
+            if (dayMap[key]) dayMap[key].entries.push(entry);
+        });
+
+        const daycards = Object.values(dayMap).map(({ date, entries: dayEntries }) => {
+            const dayKey = getLocalDateString(date);
+            const isToday = dayKey === todayStr;
+            const isEmpty = dayEntries.length === 0;
+
+            const counts = { beer: 0, wine: 0, liquor: 0, smoking: 0 };
+            dayEntries.forEach(e => { if (counts[e.category] !== undefined) counts[e.category]++; });
+
+            const jsDay = date.getDay();
+            const dayNameIdx = jsDay === 0 ? 6 : jsDay - 1;
+
+            const summaryHtml = !isEmpty
+                ? `<div class="day-summary">${buildCategorySummary(counts)}</div>`
+                : '';
 
             return `
-                <div class="entry-item ${entry.category}">
-                    <span class="entry-text">${emoji} ${categoryName} - ${timeFormatted}</span>
-                    <button onclick="deleteEntry('${entry.id}')" class="btn-delete">Delete</button>
+                <div class="day-card${isToday ? ' today' : ''}${isEmpty ? ' empty' : ''}" onclick="openDayModal('${dayKey}')">
+                    <div class="day-card-header">
+                        <span class="day-name">${dayNames[dayNameIdx]}</span>
+                        <span class="day-date-num">${date.getDate()}</span>
+                        <span class="day-month-year">${months[date.getMonth()]} ${date.getFullYear()}</span>
+                    </div>
+                    ${summaryHtml}
                 </div>
             `;
         }).join('');
 
         return `
-            <div class="date-group ${isCollapsed ? 'collapsed' : ''}" id="group-${dateStr}">
-                <div class="date-header" onclick="toggleDateGroup('${dateStr}')">
-                    <span class="date-title">${dateHeader}</span>
-                    <span class="date-count">${entries.length} ${entries.length === 1 ? 'entry' : 'entries'}</span>
+            <div class="week-row${isCollapsed ? ' collapsed' : ''}" id="week-${weekKey}">
+                <div class="week-header" onclick="toggleWeekRow('${weekKey}')">
+                    <span class="week-label">${weekLabel}</span>
+                    <span class="week-summary">${weekSummary}</span>
                     <span class="toggle-icon">▼</span>
                 </div>
-                <div class="date-entries">
-                    ${entriesHtml}
+                <div class="week-content">
+                    <div class="week-days">${daycards}</div>
                 </div>
             </div>
         `;
     }).join('');
 }
 
-function formatDateHeader(date) {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-    const today = new Date();
-    const yesterday = new Date();
-    yesterday.setDate(today.getDate() - 1);
-
-    const dateStr = getLocalDateString(date);
-    const todayStr = getLocalDateString(today);
-    const yesterdayStr = getLocalDateString(yesterday);
-
-    if (dateStr === todayStr) return 'Today';
-    if (dateStr === yesterdayStr) return 'Yesterday';
-
-    return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+function buildCategorySummary(counts) {
+    const parts = [];
+    if (counts.beer > 0) parts.push(`<span class="cat-pill">🍺x${counts.beer}</span>`);
+    if (counts.wine > 0) parts.push(`<span class="cat-pill">🍷x${counts.wine}</span>`);
+    if (counts.liquor > 0) parts.push(`<span class="cat-pill">🥃x${counts.liquor}</span>`);
+    if (counts.smoking > 0) parts.push(`<span class="cat-pill">💨x${counts.smoking}</span>`);
+    return parts.join('');
 }
 
 function formatTime(date) {
@@ -459,11 +552,9 @@ function formatTime(date) {
     return `${hours}:${minutes}`;
 }
 
-function toggleDateGroup(dateStr) {
-    const group = document.getElementById(`group-${dateStr}`);
-    if (group) {
-        group.classList.toggle('collapsed');
-    }
+function toggleWeekRow(weekKey) {
+    const row = document.getElementById(`week-${weekKey}`);
+    if (row) row.classList.toggle('collapsed');
 }
 
 

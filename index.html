@@ -107,6 +107,26 @@
         </section>
     </div>
 
+    <!-- Day Detail Modal -->
+    <div id="day-modal-overlay" class="day-modal-overlay" onclick="closeDayModal(event)">
+        <div class="day-modal">
+            <div class="day-modal-header">
+                <span id="day-modal-title"></span>
+                <button class="day-modal-close" onclick="closeDayModal()">✕</button>
+            </div>
+            <div id="day-modal-entries" class="day-modal-entries"></div>
+            <div class="day-modal-add">
+                <span class="day-modal-add-label">Add entry</span>
+                <div class="day-modal-btns">
+                    <button onclick="addEntryForDate('beer')" class="track-btn beer" title="Add Beer">🍺</button>
+                    <button onclick="addEntryForDate('wine')" class="track-btn wine" title="Add Wine">🍷</button>
+                    <button onclick="addEntryForDate('liquor')" class="track-btn liquor" title="Add Liquor">🥃</button>
+                    <button onclick="addEntryForDate('smoking')" class="track-btn smoking" title="Add Hookah">💨</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <footer class="quick-track-footer">
         <div class="quick-track">
             <button onclick="addEntry('beer')" class="track-btn beer" title="Add Beer">🍺</button>
