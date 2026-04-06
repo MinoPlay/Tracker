@@ -539,11 +539,11 @@ function renderEntries() {
 
 function buildCategorySummary(counts) {
     const parts = [];
-    if (counts.beer > 0) parts.push(`<span class="cat-pill">🍺x${counts.beer}</span>`);
-    if (counts.wine > 0) parts.push(`<span class="cat-pill">🍷x${counts.wine}</span>`);
-    if (counts.liquor > 0) parts.push(`<span class="cat-pill">🥃x${counts.liquor}</span>`);
-    if (counts.smoking > 0) parts.push(`<span class="cat-pill">💨x${counts.smoking}</span>`);
-    return parts.join('');
+    if (counts.beer > 0) parts.push(`${counts.beer}🍺`);
+    if (counts.wine > 0) parts.push(`${counts.wine}🍷`);
+    if (counts.liquor > 0) parts.push(`${counts.liquor}🥃`);
+    if (counts.smoking > 0) parts.push(`${counts.smoking}💨`);
+    return parts.length ? `<span class="cat-pill">${parts.join('|')}</span>` : '';
 }
 
 function formatTime(date) {
