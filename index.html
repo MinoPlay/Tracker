@@ -67,10 +67,10 @@
                         <option value="bar" selected>📊 Bar Chart</option>
                     </select>
                     <select id="time-period" onchange="updateTimePeriod()">
-                        <option value="7">Last 7 Days</option>
-                        <option value="30" selected>Last 30 Days</option>
-                        <option value="90">Last 90 Days</option>
-                        <option value="365">Last 365 Days</option>
+                        <option value="4">Last 4 Weeks</option>
+                        <option value="8">Last 8 Weeks</option>
+                        <option value="12" selected>Last 12 Weeks</option>
+                        <option value="26">Last 26 Weeks</option>
                     </select>
                 </div>
             </div>
@@ -85,6 +85,9 @@
             <div id="tab-chart" class="tab-content active">
                 <div class="chart-container">
                     <canvas id="consumptionChart"></canvas>
+                </div>
+                <div class="chart-container chart-container-days">
+                    <canvas id="daysChart"></canvas>
                 </div>
                 <div class="summary-stats" id="summary-stats"></div>
             </div>

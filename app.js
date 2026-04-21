@@ -20,6 +20,7 @@ let currentData = {
 };
 
 let chart = null;
+let daysChart = null;
 
 // ===== INITIALIZATION =====
 
@@ -110,7 +111,7 @@ function loadTimePeriodPreference() {
     if (savedPeriod) {
         document.getElementById('time-period').value = savedPeriod;
     } else {
-        document.getElementById('time-period').value = '30';
+        document.getElementById('time-period').value = '12';
     }
 }
 
@@ -587,103 +588,64 @@ function getLocalDateString(date) {
 
 // ===== CHART AND STATISTICS =====
 
-function getDateRange(period) {
-    const endDate = new Date();
-    endDate.setHours(23, 59, 59, 999);
-
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - period + 1);
-    startDate.setHours(0, 0, 0, 0);
-
-    return { startDate, endDate };
+function formatChartLabel(date) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${months[date.getMonth()]} ${date.getDate()}`;
 }
 
 function updateChart() {
-    const period = parseInt(document.getElementById('time-period').value);
-    const { startDate, endDate } = getDateRange(period);
+    const numWeeks = parseInt(document.getElementById('time-period').value);
 
-    // Filter entries by date range
+    // Start from the Monday of (currentWeek - numWeeks + 1)
+    const todayWeekStart = getWeekStart(new Date());
+    const startDate = new Date(todayWeekStart);
+    startDate.setDate(startDate.getDate() - (numWeeks - 1) * 7);
+    startDate.setHours(0, 0, 0, 0);
+
+    const endDate = new Date(todayWeekStart);
+    endDate.setDate(endDate.getDate() + 6);
+    endDate.setHours(23, 59, 59, 999);
+
     const filteredEntries = currentData.entries.filter(entry => {
         const entryDate = new Date(entry.timestamp);
         return entryDate >= startDate && entryDate <= endDate;
     });
 
-    // Aggregate data
-    let aggregatedData;
-    if (period <= 30) {
-        // Daily aggregation for 7 and 30 days
-        aggregatedData = aggregateByDay(filteredEntries, startDate, endDate);
-    } else {
-        // Weekly aggregation for 90 and 365 days
-        aggregatedData = aggregateByWeek(filteredEntries, startDate, endDate);
-    }
+    const aggregatedData = aggregateByWeek(filteredEntries, startDate, endDate);
 
-    renderChart(aggregatedData, period);
+    renderUnitsChart(aggregatedData);
+    renderDaysChart(aggregatedData);
     renderSummaryStats(filteredEntries);
-}
-
-function aggregateByDay(entries, startDate, endDate) {
-    const data = {
-        labels: [],
-        beer: [],
-        wine: [],
-        liquor: [],
-        smoking: []
-    };
-
-    const current = new Date(startDate);
-    current.setHours(0, 0, 0, 0);
-
-    while (current <= endDate) {
-        const dateStr = getLocalDateString(current);
-        data.labels.push(formatChartLabel(current, false));
-
-        const dayEntries = entries.filter(e => {
-            const entryDate = new Date(e.timestamp);
-            return getLocalDateString(entryDate) === dateStr;
-        });
-
-        data.beer.push(dayEntries.filter(e => e.category === 'beer').length);
-        data.wine.push(dayEntries.filter(e => e.category === 'wine').length);
-        data.liquor.push(dayEntries.filter(e => e.category === 'liquor').length);
-        data.smoking.push(dayEntries.filter(e => e.category === 'smoking').length);
-
-        current.setDate(current.getDate() + 1);
-    }
-
-    return data;
 }
 
 function aggregateByWeek(entries, startDate, endDate) {
     const data = {
         labels: [],
-        beer: [],
-        wine: [],
-        liquor: [],
-        smoking: []
+        units: { beer: [], wine: [], liquor: [], smoking: [] },
+        days: { beer: [], wine: [], liquor: [], smoking: [] }
     };
 
-    // Start from the beginning of the week
     const current = new Date(startDate);
     current.setHours(0, 0, 0, 0);
-    const dayOfWeek = current.getDay();
-    current.setDate(current.getDate() - dayOfWeek); // Go to Sunday
 
     while (current <= endDate) {
         const weekEnd = new Date(current);
         weekEnd.setDate(weekEnd.getDate() + 6);
+        weekEnd.setHours(23, 59, 59, 999);
 
-        data.labels.push(formatChartLabel(current, true));
+        data.labels.push(formatChartLabel(current));
 
         const weekEntries = entries.filter(e => {
-            const entryDate = new Date(e.timestamp);
-            return entryDate >= current && entryDate <= weekEnd;
+            const d = new Date(e.timestamp);
+            return d >= current && d <= weekEnd;
         });
 
-        data.beer.push(weekEntries.filter(e => e.category === 'beer').length);
-        data.wine.push(weekEntries.filter(e => e.category === 'wine').length);
-        data.liquor.push(weekEntries.filter(e => e.category === 'liquor').length);
-        data.smoking.push(weekEntries.filter(e => e.category === 'smoking').length);
+        ['beer', 'wine', 'liquor', 'smoking'].forEach(cat => {
+            const catEntries = weekEntries.filter(e => e.category === cat);
+            data.units[cat].push(catEntries.length);
+            const distinctDays = new Set(catEntries.map(e => getLocalDateString(new Date(e.timestamp)))).size;
+            data.days[cat].push(distinctDays);
+        });
 
         current.setDate(current.getDate() + 7);
     }
@@ -691,16 +653,40 @@ function aggregateByWeek(entries, startDate, endDate) {
     return data;
 }
 
-function formatChartLabel(date, isWeek) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    if (isWeek) {
-        return `${months[date.getMonth()]} ${date.getDate()}`;
-    } else {
-        return `${months[date.getMonth()]} ${date.getDate()}`;
-    }
+function buildDatasets(dataObj, isBar) {
+    return [
+        {
+            label: 'Beer',
+            data: dataObj.beer,
+            borderColor: '#FFB300',
+            backgroundColor: isBar ? '#FFB300' : 'rgba(255, 179, 0, 0.1)',
+            tension: 0.3
+        },
+        {
+            label: 'Wine',
+            data: dataObj.wine,
+            borderColor: '#C62828',
+            backgroundColor: isBar ? '#C62828' : 'rgba(198, 40, 40, 0.1)',
+            tension: 0.3
+        },
+        {
+            label: 'Liquor',
+            data: dataObj.liquor,
+            borderColor: '#FF6F00',
+            backgroundColor: isBar ? '#FF6F00' : 'rgba(255, 111, 0, 0.1)',
+            tension: 0.3
+        },
+        {
+            label: 'Hookah',
+            data: dataObj.smoking,
+            borderColor: '#616161',
+            backgroundColor: isBar ? '#616161' : 'rgba(97, 97, 97, 0.1)',
+            tension: 0.3
+        }
+    ];
 }
 
-function renderChart(data, period) {
+function renderUnitsChart(data) {
     const ctx = document.getElementById('consumptionChart').getContext('2d');
 
     if (chart) {
@@ -714,66 +700,57 @@ function renderChart(data, period) {
         type: chartType,
         data: {
             labels: data.labels,
-            datasets: [
-                {
-                    label: 'Beer',
-                    data: data.beer,
-                    borderColor: '#FFB300',
-                    backgroundColor: isBar ? '#FFB300' : 'rgba(255, 179, 0, 0.1)',
-                    tension: 0.3
-                },
-                {
-                    label: 'Wine',
-                    data: data.wine,
-                    borderColor: '#C62828',
-                    backgroundColor: isBar ? '#C62828' : 'rgba(198, 40, 40, 0.1)',
-                    tension: 0.3
-                },
-                {
-                    label: 'Liquor',
-                    data: data.liquor,
-                    borderColor: '#FF6F00',
-                    backgroundColor: isBar ? '#FF6F00' : 'rgba(255, 111, 0, 0.1)',
-                    tension: 0.3
-                },
-                {
-                    label: 'Hookah',
-                    data: data.smoking,
-                    borderColor: '#616161',
-                    backgroundColor: isBar ? '#616161' : 'rgba(97, 97, 97, 0.1)',
-                    tension: 0.3
-                }
-            ]
+            datasets: buildDatasets(data.units, isBar)
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: {
-                    display: true,
-                    position: 'top'
-                },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false
-                }
+                legend: { display: true, position: 'top' },
+                tooltip: { mode: 'index', intersect: false },
+                title: { display: true, text: 'Units Consumed per Week', font: { size: 14 } }
             },
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
-                    },
-                    title: {
-                        display: true,
-                        text: 'Count'
-                    }
+                    ticks: { stepSize: 1 },
+                    title: { display: true, text: 'Units' }
                 },
                 x: {
-                    title: {
-                        display: true,
-                        text: period <= 30 ? 'Date' : 'Week Starting'
-                    }
+                    title: { display: false }
+                }(data) {
+    const ctx = document.getElementById('daysChart').getContext('2d');
+
+    if (daysChart) {
+        daysChart.destroy();
+    }
+
+    const chartType = document.getElementById('chart-type').value;
+    const isBar = chartType === 'bar';
+
+    daysChart = new Chart(ctx, {
+        type: chartType,
+        data: {
+            labels: data.labels,
+            datasets: buildDatasets(data.days, isBar)
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: true, position: 'top' },
+                tooltip: { mode: 'index', intersect: false },
+                title: { display: true, text: 'Days Consumed per Week', font: { size: 14 } }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 7,
+                    ticks: { stepSize: 1 },
+                    title: { display: true, text: 'Days' }
+                },
+                x: {
+                    title: { display: false }
                 }
             }
         }

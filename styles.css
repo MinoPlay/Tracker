@@ -431,6 +431,10 @@ section h2 {
     margin-bottom: 15px;
 }
 
+.chart-container-days {
+    margin-top: 20px;
+}
+
 .summary-stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
@@ -865,9 +869,6 @@ section h2 {
         flex-direction: column;
         align-items: stretch;
     }
-
-    #time-period {
-        width: 100%;
     }
 
     .summary-stats {
