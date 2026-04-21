@@ -617,7 +617,7 @@ function updateChart() {
 
     renderUnitsChart(aggregatedData);
     renderDaysChart(aggregatedData);
-    renderSummaryStats(filteredEntries);
+    renderSummaryStats(aggregatedData);
 }
 
 function aggregateByWeek(entries, startDate, endDate) {
@@ -767,45 +767,55 @@ function renderDaysChart(data) {
     });
 }
 
-function renderSummaryStats(entries) {
-    const stats = {
-        beer: entries.filter(e => e.category === 'beer').length,
-        wine: entries.filter(e => e.category === 'wine').length,
-        liquor: entries.filter(e => e.category === 'liquor').length,
-        smoking: entries.filter(e => e.category === 'smoking').length
+function renderSummaryStats(aggregatedData) {
+    const units = {
+        beer: aggregatedData.units.beer.reduce((a, b) => a + b, 0),
+        wine: aggregatedData.units.wine.reduce((a, b) => a + b, 0),
+        liquor: aggregatedData.units.liquor.reduce((a, b) => a + b, 0),
+        smoking: aggregatedData.units.smoking.reduce((a, b) => a + b, 0)
     };
+    const unitsTotal = units.beer + units.wine + units.liquor + units.smoking;
 
-    const total = stats.beer + stats.wine + stats.liquor + stats.smoking;
-    const period = document.getElementById('time-period').value;
+    const days = {
+        beer: aggregatedData.days.beer.reduce((a, b) => a + b, 0),
+        wine: aggregatedData.days.wine.reduce((a, b) => a + b, 0),
+        liquor: aggregatedData.days.liquor.reduce((a, b) => a + b, 0),
+        smoking: aggregatedData.days.smoking.reduce((a, b) => a + b, 0)
+    };
+    const daysTotal = days.beer + days.wine + days.liquor + days.smoking;
 
-    const container = document.getElementById('summary-stats');
-    container.innerHTML = `
-        <div class="stat-item">
-            <span class="stat-emoji">🍺</span>
-            <span class="stat-label">Beer:</span>
-            <span class="stat-value">${stats.beer}</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-emoji">🍷</span>
-            <span class="stat-label">Wine:</span>
-            <span class="stat-value">${stats.wine}</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-emoji">🥃</span>
-            <span class="stat-label">Liquor:</span>
-            <span class="stat-value">${stats.liquor}</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-emoji">💨</span>
-            <span class="stat-label">Hookah:</span>
-            <span class="stat-value">${stats.smoking}</span>
-        </div>
-        <div class="stat-item total">
-            <span class="stat-emoji">📊</span>
-            <span class="stat-label">Total:</span>
-            <span class="stat-value">${total}</span>
-        </div>
-    `;
+    function buildStatsHtml(stats, total) {
+        return `
+            <div class="stat-item">
+                <span class="stat-emoji">🍺</span>
+                <span class="stat-label">Beer:</span>
+                <span class="stat-value">${stats.beer}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-emoji">🍷</span>
+                <span class="stat-label">Wine:</span>
+                <span class="stat-value">${stats.wine}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-emoji">🥃</span>
+                <span class="stat-label">Liquor:</span>
+                <span class="stat-value">${stats.liquor}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-emoji">💨</span>
+                <span class="stat-label">Hookah:</span>
+                <span class="stat-value">${stats.smoking}</span>
+            </div>
+            <div class="stat-item total">
+                <span class="stat-emoji">📊</span>
+                <span class="stat-label">Total:</span>
+                <span class="stat-value">${total}</span>
+            </div>
+        `;
+    }
+
+    document.getElementById('summary-stats').innerHTML = buildStatsHtml(units, unitsTotal);
+    document.getElementById('summary-stats-days').innerHTML = buildStatsHtml(days, daysTotal);
 }
 
 
