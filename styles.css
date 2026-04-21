@@ -432,7 +432,58 @@ section h2 {
 }
 
 .chart-container-days {
-    margin-top: 20px;
+    margin-top: 0;
+}
+
+.chart-block {
+    margin-bottom: 20px;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.chart-block-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: #f1f3f9;
+    cursor: pointer;
+    user-select: none;
+    font-weight: 600;
+    font-size: 0.95em;
+    color: #444;
+    transition: background 0.2s;
+}
+
+.chart-block-header:hover {
+    background: #e4e8f0;
+}
+
+.chart-block-toggle {
+    font-size: 0.8em;
+    color: #667eea;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chart-block.collapsed .chart-block-toggle {
+    transform: rotate(-90deg);
+}
+
+.chart-block-body {
+    padding: 15px;
+    transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
+    max-height: 2000px;
+    opacity: 1;
+    overflow: hidden;
+}
+
+.chart-block.collapsed .chart-block-body {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    opacity: 0;
+    pointer-events: none;
 }
 
 .summary-stats {

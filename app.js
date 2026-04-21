@@ -6,6 +6,8 @@ const MODE_KEY = 'consumption-tracker-mode';
 const CHART_TYPE_KEY = 'consumption-tracker-chart-type';
 const TIME_PERIOD_KEY = 'consumption-tracker-time-period';
 const CHART_COLLAPSED_KEY = 'consumption-tracker-chart-collapsed';
+const UNITS_BLOCK_COLLAPSED_KEY = 'consumption-tracker-units-collapsed';
+const DAYS_BLOCK_COLLAPSED_KEY = 'consumption-tracker-days-collapsed';
 
 let config = {
     token: '',
@@ -29,6 +31,7 @@ window.addEventListener('DOMContentLoaded', () => {
     loadChartTypePreference();
     loadTimePeriodPreference();
     loadChartCollapsedPreference();
+    loadChartBlockCollapsedPreference();
     updateModeUI();
     if (config.mode === 'local' || isConfigured()) {
         loadData();
@@ -85,6 +88,22 @@ function loadChartCollapsedPreference() {
     if (isCollapsed) {
         document.getElementById('chart-section').classList.add('collapsed');
     }
+}
+
+function loadChartBlockCollapsedPreference() {
+    if (localStorage.getItem(UNITS_BLOCK_COLLAPSED_KEY) === 'true') {
+        document.getElementById('chart-block-units').classList.add('collapsed');
+    }
+    if (localStorage.getItem(DAYS_BLOCK_COLLAPSED_KEY) === 'true') {
+        document.getElementById('chart-block-days').classList.add('collapsed');
+    }
+}
+
+function toggleChartBlock(name) {
+    const block = document.getElementById(`chart-block-${name}`);
+    const isCollapsed = block.classList.toggle('collapsed');
+    const key = name === 'units' ? UNITS_BLOCK_COLLAPSED_KEY : DAYS_BLOCK_COLLAPSED_KEY;
+    localStorage.setItem(key, isCollapsed);
 }
 
 function isConfigured() {
@@ -784,7 +803,7 @@ function renderSummaryStats(aggregatedData) {
     };
     const daysTotal = days.beer + days.wine + days.liquor + days.smoking;
 
-    function buildStatsHtml(stats, total) {
+    function buildStatsHtml(stats) {
         return `
             <div class="stat-item">
                 <span class="stat-emoji">🍺</span>
@@ -806,16 +825,11 @@ function renderSummaryStats(aggregatedData) {
                 <span class="stat-label">Hookah:</span>
                 <span class="stat-value">${stats.smoking}</span>
             </div>
-            <div class="stat-item total">
-                <span class="stat-emoji">📊</span>
-                <span class="stat-label">Total:</span>
-                <span class="stat-value">${total}</span>
-            </div>
         `;
     }
 
-    document.getElementById('summary-stats').innerHTML = buildStatsHtml(units, unitsTotal);
-    document.getElementById('summary-stats-days').innerHTML = buildStatsHtml(days, daysTotal);
+    document.getElementById('summary-stats').innerHTML = buildStatsHtml(units);
+    document.getElementById('summary-stats-days').innerHTML = buildStatsHtml(days);
 }
 
 

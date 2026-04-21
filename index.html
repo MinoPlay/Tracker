@@ -83,14 +83,30 @@
 
             <!-- Tab Content: Chart View -->
             <div id="tab-chart" class="tab-content active">
-                <div class="chart-container">
-                    <canvas id="consumptionChart"></canvas>
+                <div class="chart-block" id="chart-block-units">
+                    <div class="chart-block-header" onclick="toggleChartBlock('units')">
+                        <span>📈 Units Consumed</span>
+                        <span class="chart-block-toggle">▼</span>
+                    </div>
+                    <div class="chart-block-body">
+                        <div class="chart-container">
+                            <canvas id="consumptionChart"></canvas>
+                        </div>
+                        <div class="summary-stats" id="summary-stats"></div>
+                    </div>
                 </div>
-                <div class="summary-stats" id="summary-stats"></div>
-                <div class="chart-container chart-container-days">
-                    <canvas id="daysChart"></canvas>
+                <div class="chart-block" id="chart-block-days">
+                    <div class="chart-block-header" onclick="toggleChartBlock('days')">
+                        <span>📅 Days Consumed</span>
+                        <span class="chart-block-toggle">▼</span>
+                    </div>
+                    <div class="chart-block-body">
+                        <div class="chart-container chart-container-days">
+                            <canvas id="daysChart"></canvas>
+                        </div>
+                        <div class="summary-stats" id="summary-stats-days"></div>
+                    </div>
                 </div>
-                <div class="summary-stats" id="summary-stats-days"></div>
             </div>
 
 
