@@ -718,7 +718,13 @@ function renderUnitsChart(data) {
                 },
                 x: {
                     title: { display: false }
-                }(data) {
+                }
+            }
+        }
+    });
+}
+
+function renderDaysChart(data) {
     const ctx = document.getElementById('daysChart').getContext('2d');
 
     if (daysChart) {

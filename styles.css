@@ -869,7 +869,6 @@ section h2 {
         flex-direction: column;
         align-items: stretch;
     }
-    }
 
     .summary-stats {
         grid-template-columns: 1fr 1fr;
