@@ -107,11 +107,13 @@ function updateChartType() {
 }
 
 function loadTimePeriodPreference() {
+    const validOptions = ['4', '8', '12', '26'];
     const savedPeriod = localStorage.getItem(TIME_PERIOD_KEY);
-    if (savedPeriod) {
+    if (savedPeriod && validOptions.includes(savedPeriod)) {
         document.getElementById('time-period').value = savedPeriod;
     } else {
         document.getElementById('time-period').value = '12';
+        localStorage.setItem(TIME_PERIOD_KEY, '12');
     }
 }
 
@@ -594,7 +596,7 @@ function formatChartLabel(date) {
 }
 
 function updateChart() {
-    const numWeeks = parseInt(document.getElementById('time-period').value);
+    const numWeeks = parseInt(document.getElementById('time-period').value) || 12;
 
     // Start from the Monday of (currentWeek - numWeeks + 1)
     const todayWeekStart = getWeekStart(new Date());
