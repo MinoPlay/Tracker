@@ -719,7 +719,8 @@ function renderUnitsChart(data) {
                     title: { display: true, text: 'Units' }
                 },
                 x: {
-                    title: { display: false }
+                    title: { display: false },
+                    ticks: { display: false }
                 }
             }
         }
@@ -758,7 +759,8 @@ function renderDaysChart(data) {
                     title: { display: true, text: 'Days' }
                 },
                 x: {
-                    title: { display: false }
+                    title: { display: false },
+                    ticks: { display: false }
                 }
             }
         }
