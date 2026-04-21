@@ -1,4 +1,4 @@
-const CACHE_NAME = 'consumption-tracker-19650e6';
+const CACHE_NAME = 'consumption-tracker-aec3599';
 const STATIC_ASSETS = [
   './',
   './index.html',
