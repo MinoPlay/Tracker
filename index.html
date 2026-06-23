@@ -57,43 +57,21 @@
         <div id="status" class="status hidden"></div>
 
 
-        <!-- Statistics Section with Tabs -->
+        <!-- Statistics Section -->
         <section class="chart-section" id="chart-section">
-            <div class="chart-header">
-                <h2 onclick="toggleChart()" style="cursor: pointer;">Statistics</h2>
-                <div class="chart-controls">
-                    <select id="chart-type" onchange="updateChartType()">
-                        <option value="line">📈 Line Chart</option>
-                        <option value="bar" selected>📊 Bar Chart</option>
-                    </select>
-                    <select id="time-period" onchange="updateTimePeriod()">
-                        <option value="7">Last 7 Days</option>
-                        <option value="30" selected>Last 30 Days</option>
-                        <option value="90">Last 90 Days</option>
-                        <option value="365">Last 365 Days</option>
-                    </select>
-                </div>
+            <div class="monthly-nav">
+                <button class="monthly-nav-btn" onclick="navigateMonth(-1)">&#8249;</button>
+                <span id="monthly-label" onclick="toggleChart()" style="cursor: pointer;"></span>
+                <button class="monthly-nav-btn" id="monthly-nav-next" onclick="navigateMonth(1)">&#8250;</button>
             </div>
 
-            <!-- Tab Navigation -->
-            <div class="tab-navigation">
-                <button class="tab-btn active" onclick="switchTab('chart')">📊 Chart</button>
-                <button class="tab-btn" onclick="switchTab('overview')">📈 Overview</button>
-            </div>
-
-            <!-- Tab Content: Chart View -->
-            <div id="tab-chart" class="tab-content active">
-                <div class="chart-container">
-                    <canvas id="consumptionChart"></canvas>
-                </div>
-                <div class="summary-stats" id="summary-stats"></div>
-            </div>
-
-
-
-            <!-- Tab Content: Overview -->
-            <div id="tab-overview" class="tab-content">
-                <div class="overview-grid" id="overview-grid">
+            <!-- Monthly Pie Charts -->
+            <div id="tab-monthly">
+                <div class="monthly-pies-row">
+                    <div class="pie-wrap"><canvas id="pie-beer"></canvas></div>
+                    <div class="pie-wrap"><canvas id="pie-wine"></canvas></div>
+                    <div class="pie-wrap"><canvas id="pie-liquor"></canvas></div>
+                    <div class="pie-wrap"><canvas id="pie-smoking"></canvas></div>
                 </div>
             </div>
         </section>

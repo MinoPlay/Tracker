@@ -312,34 +312,12 @@ section h2 {
     margin-bottom: 10px;
 }
 
-.chart-section.collapsed .chart-header {
-    margin-bottom: 0;
-}
-
-.chart-section.collapsed h2 {
-    margin-bottom: 0;
-    font-size: 1.1em;
-}
-
-.chart-section.collapsed .chart-controls,
-.chart-section.collapsed .tab-navigation,
-.chart-section.collapsed .tab-content {
+.chart-section.collapsed #tab-monthly {
     display: none;
 }
 
-.chart-section.collapsed h2::after {
-    content: ' ▾';
-    font-size: 0.8em;
-    color: #667eea;
-}
-
-.chart-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    flex-wrap: wrap;
-    gap: 10px;
+.chart-section.collapsed .monthly-nav {
+    margin-bottom: 0;
 }
 
 .chart-controls {
@@ -1043,3 +1021,77 @@ section h2 {
     height: 48px;
     font-size: 1.4em;
 }
+
+/* Monthly Pie Charts Tab */
+.monthly-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+#monthly-label {
+    font-size: 1.2em;
+    font-weight: 700;
+    color: #444;
+    min-width: 130px;
+    text-align: center;
+    user-select: none;
+}
+
+#monthly-label:hover {
+    color: #667eea;
+}
+
+.monthly-nav-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    font-size: 1.4em;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, transform 0.15s;
+    flex-shrink: 0;
+}
+
+.monthly-nav-btn:hover:not(:disabled) {
+    background: #5568d3;
+    transform: scale(1.1);
+}
+
+.monthly-nav-btn:disabled {
+    background: #ccc;
+    cursor: default;
+}
+
+
+.monthly-pies-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: flex-start;
+    flex-wrap: nowrap;
+}
+
+.pie-wrap {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.pie-wrap canvas {
+    width: 100% !important;
+    max-width: 90px;
+    height: auto !important;
+}
+

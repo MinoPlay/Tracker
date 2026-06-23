@@ -20,13 +20,13 @@ let currentData = {
 };
 
 let chart = null;
+let monthlyPieCharts = {};
+let currentMonthlyDate = new Date();
 
 // ===== INITIALIZATION =====
 
 window.addEventListener('DOMContentLoaded', () => {
     loadConfig();
-    loadChartTypePreference();
-    loadTimePeriodPreference();
     loadChartCollapsedPreference();
     updateModeUI();
     if (config.mode === 'local' || isConfigured()) {
@@ -419,6 +419,8 @@ function switchTab(tabName) {
     // Render the content for the selected tab
     if (tabName === 'overview') {
         renderOverview();
+    } else if (tabName === 'monthly') {
+        renderMonthlyPieCharts();
     }
 }
 
@@ -426,12 +428,7 @@ function switchTab(tabName) {
 
 function renderAll() {
     renderEntries();
-    updateChart();
-    // Re-render active tab content
-    const activeTab = document.querySelector('.tab-btn.active');
-    if (activeTab && activeTab.textContent.includes('Overview')) {
-        renderOverview();
-    }
+    renderMonthlyPieCharts();
 }
 
 function getWeekStart(date) {
@@ -1005,4 +1002,100 @@ function renderOverview() {
         ${generateSectionHtml('Drinking', '🍷', drinkingStats, 'drinking')}
         ${generateSectionHtml('Hookah', '💨', hookahStats, 'hookah')}
     `;
+}
+
+function navigateMonth(delta) {
+    const now = new Date();
+    currentMonthlyDate = new Date(currentMonthlyDate.getFullYear(), currentMonthlyDate.getMonth() + delta, 1);
+    // Clamp to current month
+    if (currentMonthlyDate > new Date(now.getFullYear(), now.getMonth(), 1)) {
+        currentMonthlyDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    }
+    renderMonthlyPieCharts();
+}
+
+function renderMonthlyPieCharts() {
+    const year = currentMonthlyDate.getFullYear();
+    const month = currentMonthlyDate.getMonth();
+    const totalDays = new Date(year, month + 1, 0).getDate();
+
+    // Update label
+    const label = currentMonthlyDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+    document.getElementById('monthly-label').textContent = label;
+
+    // Disable next button if already at current month
+    const now = new Date();
+    const nextBtn = document.getElementById('monthly-nav-next');
+    if (year === now.getFullYear() && month === now.getMonth()) {
+        nextBtn.disabled = true;
+    } else {
+        nextBtn.disabled = false;
+    }
+
+    const categories = [
+        { id: 'pie-beer', key: 'beer', color: '#FFB300', emoji: '🍺' },
+        { id: 'pie-wine', key: 'wine', color: '#C62828', emoji: '🍷' },
+        { id: 'pie-liquor', key: 'liquor', color: '#FF6F00', emoji: '🥃' },
+        { id: 'pie-smoking', key: 'smoking', color: '#616161', emoji: '💨' }
+    ];
+
+    categories.forEach(cat => {
+        const consumedDays = new Set(
+            currentData.entries
+                .filter(entry => {
+                    const d = new Date(entry.timestamp);
+                    return d.getFullYear() === year && d.getMonth() === month && entry.category === cat.key;
+                })
+                .map(entry => new Date(entry.timestamp).getDate())
+        ).size;
+
+        const remaining = totalDays - consumedDays;
+        const pct = totalDays > 0 ? Math.round((consumedDays / totalDays) * 100) : 0;
+
+        if (monthlyPieCharts[cat.id]) {
+            monthlyPieCharts[cat.id].destroy();
+            delete monthlyPieCharts[cat.id];
+        }
+
+        const canvas = document.getElementById(cat.id);
+        if (!canvas) return;
+
+        monthlyPieCharts[cat.id] = new Chart(canvas, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [consumedDays, remaining],
+                    backgroundColor: [cat.color, '#e9ecef'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                cutout: '65%',
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        filter: item => item.dataIndex === 0,
+                        callbacks: {
+                            label: ctx => `${consumedDays} Day${consumedDays !== 1 ? 's' : ''} ${cat.emoji}`
+                        }
+                    }
+                }
+            },
+            plugins: [{
+                id: 'centerText',
+                afterDatasetsDraw(chart) {
+                    const { ctx, chartArea: { width, height, left, top } } = chart;
+                    ctx.save();
+                    ctx.font = `bold ${Math.round(width * 0.18)}px Segoe UI, sans-serif`;
+                    ctx.fillStyle = cat.color;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(`${pct}%`, left + width / 2, top + height / 2);
+                    ctx.restore();
+                }
+            }]
+        });
+    });
 }
