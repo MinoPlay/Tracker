@@ -1131,6 +1131,39 @@ section h2 {
     flex-wrap: nowrap;
 }
 
+.pie-metric-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 12px;
+}
+
+.pie-metric-btn {
+    padding: 6px 18px;
+    border: 1px solid #ccc;
+    background: #f4f4f5;
+    color: #555;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: background 0.15s, color 0.15s;
+}
+
+.pie-metric-btn:first-child {
+    border-radius: 6px 0 0 6px;
+    border-right: none;
+}
+
+.pie-metric-btn:last-child {
+    border-radius: 0 6px 6px 0;
+}
+
+.pie-metric-btn.active {
+    background: #4a90d9;
+    color: #fff;
+    border-color: #4a90d9;
+}
+
 .pie-wrap {
     flex: 1;
     min-width: 0;

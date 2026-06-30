@@ -67,6 +67,10 @@
 
             <!-- Monthly Pie Charts -->
             <div id="tab-monthly">
+                <div class="pie-metric-toggle">
+                    <button class="pie-metric-btn" data-metric="days" onclick="setPieMetric('days')">Days</button>
+                    <button class="pie-metric-btn" data-metric="units" onclick="setPieMetric('units')">Units</button>
+                </div>
                 <div class="monthly-pies-row">
                     <div class="pie-wrap"><canvas id="pie-beer"></canvas></div>
                     <div class="pie-wrap"><canvas id="pie-wine"></canvas></div>
@@ -98,7 +102,7 @@
                 <div class="day-modal-btns">
                     <button onclick="addEntryForDate('beer')" class="track-btn beer" title="Add Beer">🍺</button>
                     <button onclick="addEntryForDate('wine')" class="track-btn wine" title="Add Wine">🍷</button>
-                    <button onclick="addEntryForDate('liquor')" class="track-btn liquor" title="Add Liquor">🥃</button>
+                    <button onclick="addEntryForDate('liquor')" class="track-btn liquor" title="Add Liquor">🍸</button>
                     <button onclick="addEntryForDate('smoking')" class="track-btn smoking" title="Add Hookah">💨</button>
                 </div>
             </div>
@@ -109,7 +113,7 @@
         <div class="quick-track">
             <button onclick="addEntry('beer')" class="track-btn beer" title="Add Beer">🍺</button>
             <button onclick="addEntry('wine')" class="track-btn wine" title="Add Wine">🍷</button>
-            <button onclick="addEntry('liquor')" class="track-btn liquor" title="Add Liquor">🥃</button>
+            <button onclick="addEntry('liquor')" class="track-btn liquor" title="Add Liquor">🍸</button>
             <button onclick="addEntry('smoking')" class="track-btn smoking" title="Add Hookah">💨</button>
         </div>
     </footer>

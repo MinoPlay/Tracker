@@ -6,6 +6,7 @@ const MODE_KEY = 'consumption-tracker-mode';
 const CHART_TYPE_KEY = 'consumption-tracker-chart-type';
 const TIME_PERIOD_KEY = 'consumption-tracker-time-period';
 const CHART_COLLAPSED_KEY = 'consumption-tracker-chart-collapsed';
+const PIE_METRIC_KEY = 'consumption-tracker-pie-metric';
 
 let config = {
     token: '',
@@ -22,12 +23,14 @@ let currentData = {
 let chart = null;
 let monthlyPieCharts = {};
 let currentMonthlyDate = new Date();
+let pieMetric = 'days'; // 'days' or 'units'
 
 // ===== INITIALIZATION =====
 
 window.addEventListener('DOMContentLoaded', () => {
     loadConfig();
     loadChartCollapsedPreference();
+    loadPieMetricPreference();
     updateModeUI();
     if (config.mode === 'local' || isConfigured()) {
         loadData();
@@ -84,6 +87,25 @@ function loadChartCollapsedPreference() {
     if (isCollapsed) {
         document.getElementById('chart-section').classList.add('collapsed');
     }
+}
+
+function loadPieMetricPreference() {
+    const saved = localStorage.getItem(PIE_METRIC_KEY);
+    pieMetric = saved === 'units' ? 'units' : 'days';
+    updatePieMetricUI();
+}
+
+function updatePieMetricUI() {
+    document.querySelectorAll('.pie-metric-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.metric === pieMetric);
+    });
+}
+
+function setPieMetric(metric) {
+    pieMetric = metric === 'units' ? 'units' : 'days';
+    localStorage.setItem(PIE_METRIC_KEY, pieMetric);
+    updatePieMetricUI();
+    renderMonthlyPieCharts();
 }
 
 function isConfigured() {
@@ -538,7 +560,7 @@ function buildCategorySummary(counts) {
     const parts = [];
     if (counts.beer > 0) parts.push(`${counts.beer}🍺`);
     if (counts.wine > 0) parts.push(`${counts.wine}🍷`);
-    if (counts.liquor > 0) parts.push(`${counts.liquor}🥃`);
+    if (counts.liquor > 0) parts.push(`${counts.liquor}🍸`);
     if (counts.smoking > 0) parts.push(`${counts.smoking}💨`);
     return parts.length ? `<span class="cat-pill">${parts.join('|')}</span>` : '';
 }
@@ -559,7 +581,7 @@ function getCategoryEmoji(category) {
     const emojis = {
         beer: '🍺',
         wine: '🍷',
-        liquor: '🥃',
+        liquor: '🍸',
         smoking: '💨'
     };
     return emojis[category] || '📊';
@@ -801,7 +823,7 @@ function renderSummaryStats(entries) {
             <span class="stat-value">${stats.wine}</span>
         </div>
         <div class="stat-item">
-            <span class="stat-emoji">🥃</span>
+            <span class="stat-emoji">🍸</span>
             <span class="stat-label">Liquor:</span>
             <span class="stat-value">${stats.liquor}</span>
         </div>
@@ -1017,7 +1039,6 @@ function navigateMonth(delta) {
 function renderMonthlyPieCharts() {
     const year = currentMonthlyDate.getFullYear();
     const month = currentMonthlyDate.getMonth();
-    const totalDays = new Date(year, month + 1, 0).getDate();
 
     // Update label
     const label = currentMonthlyDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
@@ -1035,22 +1056,54 @@ function renderMonthlyPieCharts() {
     const categories = [
         { id: 'pie-beer', key: 'beer', color: '#FFB300', emoji: '🍺' },
         { id: 'pie-wine', key: 'wine', color: '#C62828', emoji: '🍷' },
-        { id: 'pie-liquor', key: 'liquor', color: '#FF6F00', emoji: '🥃' },
+        { id: 'pie-liquor', key: 'liquor', color: '#FF6F00', emoji: '🍸' },
         { id: 'pie-smoking', key: 'smoking', color: '#616161', emoji: '💨' }
     ];
 
-    categories.forEach(cat => {
-        const consumedDays = new Set(
-            currentData.entries
-                .filter(entry => {
-                    const d = new Date(entry.timestamp);
-                    return d.getFullYear() === year && d.getMonth() === month && entry.category === cat.key;
-                })
-                .map(entry => new Date(entry.timestamp).getDate())
-        ).size;
+    // Previous month/year for comparison
+    const prevDate = new Date(year, month - 1, 1);
+    const prevYear = prevDate.getFullYear();
+    const prevMonth = prevDate.getMonth();
 
-        const remaining = totalDays - consumedDays;
-        const pct = totalDays > 0 ? Math.round((consumedDays / totalDays) * 100) : 0;
+    const INCREASE_COLOR = '#e53935'; // red - more consumption is worse
+    const DECREASE_COLOR = '#2e9e4f'; // green - less consumption is better
+    const NEUTRAL_COLOR = '#9e9e9e';
+    const TRACK_COLOR = '#e9ecef';
+
+    // metric value for a category in a given month
+    function metricValue(catKey, y, m) {
+        const matching = currentData.entries.filter(entry => {
+            const d = new Date(entry.timestamp);
+            return d.getFullYear() === y && d.getMonth() === m && entry.category === catKey;
+        });
+        if (pieMetric === 'units') {
+            return matching.length;
+        }
+        return new Set(matching.map(entry => new Date(entry.timestamp).getDate())).size;
+    }
+
+    categories.forEach(cat => {
+        const current = metricValue(cat.key, year, month);
+        const previous = metricValue(cat.key, prevYear, prevMonth);
+
+        // Percentage change vs previous month
+        let change;
+        if (previous === 0) {
+            change = current > 0 ? 100 : 0;
+        } else {
+            change = ((current - previous) / previous) * 100;
+        }
+
+        const isIncrease = change > 0;
+        const isDecrease = change < 0;
+        const fillColor = isIncrease ? INCREASE_COLOR : (isDecrease ? DECREASE_COLOR : NEUTRAL_COLOR);
+
+        // Ring fill proportional to change magnitude, capped at 100%
+        const magnitude = Math.min(Math.abs(change), 100);
+        const remaining = 100 - magnitude;
+
+        const sign = isIncrease ? '+' : (isDecrease ? '-' : '');
+        const centerText = `${sign}${Math.abs(Math.round(change))}%`;
 
         if (monthlyPieCharts[cat.id]) {
             monthlyPieCharts[cat.id].destroy();
@@ -1064,8 +1117,8 @@ function renderMonthlyPieCharts() {
             type: 'doughnut',
             data: {
                 datasets: [{
-                    data: [consumedDays, remaining],
-                    backgroundColor: [cat.color, '#e9ecef'],
+                    data: [magnitude, remaining],
+                    backgroundColor: [fillColor, TRACK_COLOR],
                     borderWidth: 0
                 }]
             },
@@ -1078,7 +1131,7 @@ function renderMonthlyPieCharts() {
                     tooltip: {
                         filter: item => item.dataIndex === 0,
                         callbacks: {
-                            label: ctx => `${consumedDays} Day${consumedDays !== 1 ? 's' : ''} ${cat.emoji}`
+                            label: () => `${cat.emoji} ${current} vs ${previous}`
                         }
                     }
                 }
@@ -1089,10 +1142,10 @@ function renderMonthlyPieCharts() {
                     const { ctx, chartArea: { width, height, left, top } } = chart;
                     ctx.save();
                     ctx.font = `bold ${Math.round(width * 0.18)}px Segoe UI, sans-serif`;
-                    ctx.fillStyle = cat.color;
+                    ctx.fillStyle = fillColor;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.fillText(`${pct}%`, left + width / 2, top + height / 2);
+                    ctx.fillText(centerText, left + width / 2, top + height / 2);
                     ctx.restore();
                 }
             }]
