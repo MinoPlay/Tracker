@@ -320,6 +320,10 @@ section h2 {
     margin-bottom: 0;
 }
 
+.chart-section.collapsed .pie-toggle-btn {
+    display: none;
+}
+
 .chart-controls {
     display: flex;
     gap: 8px;
@@ -1078,15 +1082,16 @@ section h2 {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 8px;
     margin-bottom: 12px;
+    flex-wrap: nowrap;
 }
 
 #monthly-label {
-    font-size: 1.2em;
+    font-size: 1.05em;
     font-weight: 700;
     color: #444;
-    min-width: 130px;
+    min-width: 96px;
     text-align: center;
     user-select: none;
 }
@@ -1131,37 +1136,23 @@ section h2 {
     flex-wrap: nowrap;
 }
 
-.pie-metric-toggle {
-    display: flex;
-    justify-content: center;
-    gap: 0;
-    margin-bottom: 12px;
-}
-
-.pie-metric-btn {
-    padding: 6px 18px;
-    border: 1px solid #ccc;
-    background: #f4f4f5;
-    color: #555;
+.pie-toggle-btn {
+    padding: 5px 12px;
+    border: 1px solid #4a90d9;
+    border-radius: 6px;
+    background: #4a90d9;
+    color: #fff;
     cursor: pointer;
-    font-size: 0.85rem;
+    font-size: 0.78rem;
     font-weight: 600;
+    min-width: 54px;
+    text-align: center;
     transition: background 0.15s, color 0.15s;
 }
 
-.pie-metric-btn:first-child {
-    border-radius: 6px 0 0 6px;
-    border-right: none;
-}
-
-.pie-metric-btn:last-child {
-    border-radius: 0 6px 6px 0;
-}
-
-.pie-metric-btn.active {
-    background: #4a90d9;
-    color: #fff;
-    border-color: #4a90d9;
+.pie-toggle-btn:hover {
+    background: #3a7bc4;
+    border-color: #3a7bc4;
 }
 
 .pie-wrap {

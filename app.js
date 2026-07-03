@@ -7,6 +7,7 @@ const CHART_TYPE_KEY = 'consumption-tracker-chart-type';
 const TIME_PERIOD_KEY = 'consumption-tracker-time-period';
 const CHART_COLLAPSED_KEY = 'consumption-tracker-chart-collapsed';
 const PIE_METRIC_KEY = 'consumption-tracker-pie-metric';
+const PIE_PERIOD_KEY = 'consumption-tracker-pie-period';
 
 let config = {
     token: '',
@@ -23,7 +24,9 @@ let currentData = {
 let chart = null;
 let monthlyPieCharts = {};
 let currentMonthlyDate = new Date();
+let currentWeeklyDate = new Date();
 let pieMetric = 'days'; // 'days' or 'units'
+let piePeriod = 'month'; // 'month' or 'week'
 
 // ===== INITIALIZATION =====
 
@@ -31,6 +34,7 @@ window.addEventListener('DOMContentLoaded', () => {
     loadConfig();
     loadChartCollapsedPreference();
     loadPieMetricPreference();
+    loadPiePeriodPreference();
     updateModeUI();
     if (config.mode === 'local' || isConfigured()) {
         loadData();
@@ -96,9 +100,8 @@ function loadPieMetricPreference() {
 }
 
 function updatePieMetricUI() {
-    document.querySelectorAll('.pie-metric-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.metric === pieMetric);
-    });
+    const btn = document.getElementById('pie-metric-btn');
+    if (btn) btn.textContent = pieMetric === 'units' ? 'Units' : 'Days';
 }
 
 function setPieMetric(metric) {
@@ -106,6 +109,35 @@ function setPieMetric(metric) {
     localStorage.setItem(PIE_METRIC_KEY, pieMetric);
     updatePieMetricUI();
     renderMonthlyPieCharts();
+}
+
+function togglePieMetric() {
+    setPieMetric(pieMetric === 'units' ? 'days' : 'units');
+}
+
+function loadPiePeriodPreference() {
+    const saved = localStorage.getItem(PIE_PERIOD_KEY);
+    piePeriod = saved === 'week' ? 'week' : 'month';
+    updatePiePeriodUI();
+}
+
+function updatePiePeriodUI() {
+    const btn = document.getElementById('pie-period-btn');
+    if (btn) btn.textContent = piePeriod === 'week' ? 'Week' : 'Month';
+}
+
+function setPiePeriod(period) {
+    piePeriod = period === 'week' ? 'week' : 'month';
+    localStorage.setItem(PIE_PERIOD_KEY, piePeriod);
+    // Reset navigation to the current period when switching
+    currentMonthlyDate = new Date();
+    currentWeeklyDate = new Date();
+    updatePiePeriodUI();
+    renderMonthlyPieCharts();
+}
+
+function togglePiePeriod() {
+    setPiePeriod(piePeriod === 'week' ? 'month' : 'week');
 }
 
 function isConfigured() {
@@ -560,7 +592,7 @@ function buildCategorySummary(counts) {
     const parts = [];
     if (counts.beer > 0) parts.push(`${counts.beer}🍺`);
     if (counts.wine > 0) parts.push(`${counts.wine}🍷`);
-    if (counts.liquor > 0) parts.push(`${counts.liquor}🍸`);
+    if (counts.liquor > 0) parts.push(`${counts.liquor}🥃`);
     if (counts.smoking > 0) parts.push(`${counts.smoking}💨`);
     return parts.length ? `<span class="cat-pill">${parts.join('|')}</span>` : '';
 }
@@ -581,7 +613,7 @@ function getCategoryEmoji(category) {
     const emojis = {
         beer: '🍺',
         wine: '🍷',
-        liquor: '🍸',
+        liquor: '🥃',
         smoking: '💨'
     };
     return emojis[category] || '📊';
@@ -823,7 +855,7 @@ function renderSummaryStats(entries) {
             <span class="stat-value">${stats.wine}</span>
         </div>
         <div class="stat-item">
-            <span class="stat-emoji">🍸</span>
+            <span class="stat-emoji">🥃</span>
             <span class="stat-label">Liquor:</span>
             <span class="stat-value">${stats.liquor}</span>
         </div>
@@ -1026,67 +1058,97 @@ function renderOverview() {
     `;
 }
 
-function navigateMonth(delta) {
+function navigatePeriod(delta) {
     const now = new Date();
-    currentMonthlyDate = new Date(currentMonthlyDate.getFullYear(), currentMonthlyDate.getMonth() + delta, 1);
-    // Clamp to current month
-    if (currentMonthlyDate > new Date(now.getFullYear(), now.getMonth(), 1)) {
-        currentMonthlyDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    if (piePeriod === 'week') {
+        const ws = getWeekStart(currentWeeklyDate);
+        ws.setDate(ws.getDate() + delta * 7);
+        // Clamp to the current week
+        const thisWeek = getWeekStart(now);
+        if (ws > thisWeek) return;
+        currentWeeklyDate = ws;
+    } else {
+        currentMonthlyDate = new Date(currentMonthlyDate.getFullYear(), currentMonthlyDate.getMonth() + delta, 1);
+        // Clamp to current month
+        if (currentMonthlyDate > new Date(now.getFullYear(), now.getMonth(), 1)) {
+            currentMonthlyDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        }
     }
     renderMonthlyPieCharts();
 }
 
 function renderMonthlyPieCharts() {
-    const year = currentMonthlyDate.getFullYear();
-    const month = currentMonthlyDate.getMonth();
-
-    // Update label
-    const label = currentMonthlyDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
-    document.getElementById('monthly-label').textContent = label;
-
-    // Disable next button if already at current month
     const now = new Date();
-    const nextBtn = document.getElementById('monthly-nav-next');
-    if (year === now.getFullYear() && month === now.getMonth()) {
-        nextBtn.disabled = true;
-    } else {
-        nextBtn.disabled = false;
-    }
-
     const categories = [
         { id: 'pie-beer', key: 'beer', color: '#FFB300', emoji: '🍺' },
         { id: 'pie-wine', key: 'wine', color: '#C62828', emoji: '🍷' },
-        { id: 'pie-liquor', key: 'liquor', color: '#FF6F00', emoji: '🍸' },
+        { id: 'pie-liquor', key: 'liquor', color: '#FF6F00', emoji: '🥃' },
         { id: 'pie-smoking', key: 'smoking', color: '#616161', emoji: '💨' }
     ];
 
-    // Previous month/year for comparison
-    const prevDate = new Date(year, month - 1, 1);
-    const prevYear = prevDate.getFullYear();
-    const prevMonth = prevDate.getMonth();
+    // Determine current/previous ranges, label, and next-button state per period
+    let currentRange, previousRange, label, atLatest;
+
+    if (piePeriod === 'week') {
+        const weekStart = getWeekStart(currentWeeklyDate);
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        weekEnd.setHours(23, 59, 59, 999);
+
+        const prevStart = new Date(weekStart);
+        prevStart.setDate(weekStart.getDate() - 7);
+        const prevEnd = new Date(prevStart);
+        prevEnd.setDate(prevStart.getDate() + 6);
+        prevEnd.setHours(23, 59, 59, 999);
+
+        currentRange = { start: weekStart, end: weekEnd };
+        previousRange = { start: prevStart, end: prevEnd };
+
+        const opts = { month: 'short', day: 'numeric' };
+        label = `${weekStart.toLocaleDateString(undefined, opts)} – ${weekEnd.toLocaleDateString(undefined, opts)}`;
+        atLatest = weekStart.getTime() >= getWeekStart(now).getTime();
+    } else {
+        const year = currentMonthlyDate.getFullYear();
+        const month = currentMonthlyDate.getMonth();
+
+        currentRange = {
+            start: new Date(year, month, 1, 0, 0, 0, 0),
+            end: new Date(year, month + 1, 0, 23, 59, 59, 999)
+        };
+        previousRange = {
+            start: new Date(year, month - 1, 1, 0, 0, 0, 0),
+            end: new Date(year, month, 0, 23, 59, 59, 999)
+        };
+
+        label = currentMonthlyDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+        atLatest = year === now.getFullYear() && month === now.getMonth();
+    }
+
+    document.getElementById('monthly-label').textContent = label;
+    document.getElementById('monthly-nav-next').disabled = atLatest;
 
     const INCREASE_COLOR = '#e53935'; // red - more consumption is worse
     const DECREASE_COLOR = '#2e9e4f'; // green - less consumption is better
     const NEUTRAL_COLOR = '#9e9e9e';
     const TRACK_COLOR = '#e9ecef';
 
-    // metric value for a category in a given month
-    function metricValue(catKey, y, m) {
+    // metric value for a category within a date range
+    function metricValue(catKey, range) {
         const matching = currentData.entries.filter(entry => {
             const d = new Date(entry.timestamp);
-            return d.getFullYear() === y && d.getMonth() === m && entry.category === catKey;
+            return d >= range.start && d <= range.end && entry.category === catKey;
         });
         if (pieMetric === 'units') {
             return matching.length;
         }
-        return new Set(matching.map(entry => new Date(entry.timestamp).getDate())).size;
+        return new Set(matching.map(entry => getLocalDateString(new Date(entry.timestamp)))).size;
     }
 
     categories.forEach(cat => {
-        const current = metricValue(cat.key, year, month);
-        const previous = metricValue(cat.key, prevYear, prevMonth);
+        const current = metricValue(cat.key, currentRange);
+        const previous = metricValue(cat.key, previousRange);
 
-        // Percentage change vs previous month
+        // Percentage change vs previous period
         let change;
         if (previous === 0) {
             change = current > 0 ? 100 : 0;
