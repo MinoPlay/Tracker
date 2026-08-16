@@ -8,6 +8,8 @@ const TIME_PERIOD_KEY = 'consumption-tracker-time-period';
 const CHART_COLLAPSED_KEY = 'consumption-tracker-chart-collapsed';
 const PIE_METRIC_KEY = 'consumption-tracker-pie-metric';
 const PIE_PERIOD_KEY = 'consumption-tracker-pie-period';
+const CHART_TEXT_COLOR = '#e4e4e7';
+const CHART_GRID_COLOR = 'rgba(228, 228, 231, 0.1)';
 
 let config = {
     token: '',
@@ -819,7 +821,8 @@ function renderChart(data, period) {
             plugins: {
                 legend: {
                     display: true,
-                    position: 'top'
+                    position: 'top',
+                    labels: { color: CHART_TEXT_COLOR }
                 },
                 tooltip: {
                     mode: 'index',
@@ -830,17 +833,23 @@ function renderChart(data, period) {
                 y: {
                     beginAtZero: true,
                     ticks: {
-                        stepSize: 1
+                        stepSize: 1,
+                        color: CHART_TEXT_COLOR
                     },
+                    grid: { color: CHART_GRID_COLOR },
                     title: {
                         display: true,
-                        text: 'Count'
+                        text: 'Count',
+                        color: CHART_TEXT_COLOR
                     }
                 },
                 x: {
+                    ticks: { color: CHART_TEXT_COLOR },
+                    grid: { color: CHART_GRID_COLOR },
                     title: {
                         display: true,
-                        text: period <= 30 ? 'Date' : 'Week Starting'
+                        text: period <= 30 ? 'Date' : 'Week Starting',
+                        color: CHART_TEXT_COLOR
                     }
                 }
             }
@@ -1147,7 +1156,7 @@ function renderMonthlyPieCharts() {
     const INCREASE_COLOR = '#e53935'; // red - more consumption is worse
     const DECREASE_COLOR = '#2e9e4f'; // green - less consumption is better
     const NEUTRAL_COLOR = '#9e9e9e';
-    const TRACK_COLOR = '#e9ecef';
+    const TRACK_COLOR = '#31314a';
 
     // metric value for a category within a date range
     function metricValue(catKey, range) {
