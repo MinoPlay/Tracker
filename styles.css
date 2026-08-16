@@ -756,6 +756,22 @@ section h2 {
     gap: 1px;
 }
 
+.week-day-pill {
+    font-weight: bold;
+}
+
+.week-day-pill.low {
+    color: #2e7d32;
+}
+
+.week-day-pill.mid {
+    color: #f9a825;
+}
+
+.week-day-pill.high {
+    color: #c62828;
+}
+
 .week-row .toggle-icon {
     font-size: 0.8em;
     color: #667eea;

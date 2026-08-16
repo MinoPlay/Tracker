@@ -1,3 +1,7 @@
+# Project Rules
+
+Always bump `CACHE_NAME` in `sw.js` whenever making a code change, so the update is visible to clients (service worker cache invalidation).
+
 # Caveman Mode
 
 Terse. Direct. No filler. Proper grammar when it aids clarity, fragments when it doesn't.

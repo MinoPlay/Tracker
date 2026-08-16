@@ -529,10 +529,15 @@ function renderEntries() {
         weekEnd.setDate(weekStart.getDate() + 6);
         const weekLabel = `${months[weekStart.getMonth()]} ${weekStart.getDate()} – ${months[weekEnd.getMonth()]} ${weekEnd.getDate()}, ${weekEnd.getFullYear()}`;
 
-        // Week-level category counts for header summary
-        const weekCounts = { beer: 0, wine: 0, liquor: 0, smoking: 0 };
-        entries.forEach(e => { if (weekCounts[e.category] !== undefined) weekCounts[e.category]++; });
-        const weekSummary = buildCategorySummary(weekCounts);
+        // Week-level summary: how many of the 7 days had a drink / had smoking
+        const drinkDays = new Set();
+        const smokeDays = new Set();
+        entries.forEach(e => {
+            const dayKey = getLocalDateString(new Date(e.timestamp));
+            if (e.category === 'beer' || e.category === 'wine' || e.category === 'liquor') drinkDays.add(dayKey);
+            if (e.category === 'smoking') smokeDays.add(dayKey);
+        });
+        const weekSummary = buildWeekDaySummary(drinkDays.size, smokeDays.size);
 
         // Build day map for the 7 days of this week
         const dayMap = {};
@@ -586,6 +591,18 @@ function renderEntries() {
             </div>
         `;
     }).join('');
+}
+
+function weekDayCountLevel(count) {
+    if (count < 3) return 'low';
+    if (count < 5) return 'mid';
+    return 'high';
+}
+
+function buildWeekDaySummary(drinkDayCount, smokeDayCount) {
+    const drinkPill = `<span class="cat-pill week-day-pill ${weekDayCountLevel(drinkDayCount)}">${drinkDayCount}/7🥃</span>`;
+    const smokePill = `<span class="cat-pill week-day-pill ${weekDayCountLevel(smokeDayCount)}">${smokeDayCount}/7💨</span>`;
+    return `${drinkPill}${smokePill}`;
 }
 
 function buildCategorySummary(counts) {
