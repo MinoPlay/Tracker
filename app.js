@@ -522,6 +522,20 @@ function renderEntries() {
 
     const sortedWeeks = Object.keys(weekGroups).sort((a, b) => new Date(b) - new Date(a));
 
+    // Pre-compute how many of the 7 days had a drink / had smoking, per week,
+    // so each week can be compared against the previous one.
+    const weekDayCounts = {};
+    sortedWeeks.forEach(weekKey => {
+        const drinkDays = new Set();
+        const smokeDays = new Set();
+        weekGroups[weekKey].entries.forEach(e => {
+            const dayKey = getLocalDateString(new Date(e.timestamp));
+            if (e.category === 'beer' || e.category === 'wine' || e.category === 'liquor') drinkDays.add(dayKey);
+            if (e.category === 'smoking') smokeDays.add(dayKey);
+        });
+        weekDayCounts[weekKey] = { drinkDayCount: drinkDays.size, smokeDayCount: smokeDays.size };
+    });
+
     container.innerHTML = sortedWeeks.map(weekKey => {
         const { weekStart, entries } = weekGroups[weekKey];
         const isCurrentWeek = weekKey === currentWeekKey;
@@ -531,15 +545,20 @@ function renderEntries() {
         weekEnd.setDate(weekStart.getDate() + 6);
         const weekLabel = `${months[weekStart.getMonth()]} ${weekStart.getDate()} – ${months[weekEnd.getMonth()]} ${weekEnd.getDate()}, ${weekEnd.getFullYear()}`;
 
-        // Week-level summary: how many of the 7 days had a drink / had smoking
-        const drinkDays = new Set();
-        const smokeDays = new Set();
-        entries.forEach(e => {
-            const dayKey = getLocalDateString(new Date(e.timestamp));
-            if (e.category === 'beer' || e.category === 'wine' || e.category === 'liquor') drinkDays.add(dayKey);
-            if (e.category === 'smoking') smokeDays.add(dayKey);
-        });
-        const weekSummary = buildWeekDaySummary(drinkDays.size, smokeDays.size);
+        const { drinkDayCount, smokeDayCount } = weekDayCounts[weekKey];
+
+        // Compare against the previous calendar week (by date, not just array order,
+        // in case a week in between has no entries at all).
+        const prevWeekStart = new Date(weekStart);
+        prevWeekStart.setDate(weekStart.getDate() - 7);
+        const prevWeekKey = getLocalDateString(prevWeekStart);
+        const prevCounts = weekDayCounts[prevWeekKey];
+
+        const weekSummary = buildWeekDaySummary(
+            drinkDayCount, smokeDayCount,
+            prevCounts ? prevCounts.drinkDayCount : null,
+            prevCounts ? prevCounts.smokeDayCount : null
+        );
 
         // Build day map for the 7 days of this week
         const dayMap = {};
@@ -595,15 +614,17 @@ function renderEntries() {
     }).join('');
 }
 
-function weekDayCountLevel(count) {
-    if (count < 3) return 'low';
-    if (count < 5) return 'mid';
-    return 'high';
+function weekDayCountLevel(count, prevCount) {
+    // No previous week to compare against: stay neutral.
+    if (prevCount === null || prevCount === undefined) return 'mid';
+    if (count < prevCount) return 'low';
+    if (count > prevCount) return 'high';
+    return 'mid';
 }
 
-function buildWeekDaySummary(drinkDayCount, smokeDayCount) {
-    const drinkPill = `<span class="cat-pill week-day-pill ${weekDayCountLevel(drinkDayCount)}">${drinkDayCount}/7🥃</span>`;
-    const smokePill = `<span class="cat-pill week-day-pill ${weekDayCountLevel(smokeDayCount)}">${smokeDayCount}/7💨</span>`;
+function buildWeekDaySummary(drinkDayCount, smokeDayCount, prevDrinkDayCount, prevSmokeDayCount) {
+    const drinkPill = `<span class="cat-pill week-day-pill ${weekDayCountLevel(drinkDayCount, prevDrinkDayCount)}">${drinkDayCount}/7🥃</span>`;
+    const smokePill = `<span class="cat-pill week-day-pill ${weekDayCountLevel(smokeDayCount, prevSmokeDayCount)}">${smokeDayCount}/7💨</span>`;
     return `${drinkPill}${smokePill}`;
 }
 
